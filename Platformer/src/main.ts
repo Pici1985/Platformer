@@ -7,7 +7,7 @@ import { loadCoinSounds, loadCoinSprites, setupCoins } from "./coins";
 import { scaleX, scaleY } from "./layout";
 import { setupNextLevelScene } from "./nextLevel";
 import { createPlatforms } from "./platforms";
-import { loadStickerChartSprite, setupCollectionUI } from "./stickerChart";
+import { loadStickerChartAssets, setupCollectionUI } from "./stickerChart";
 import { createWalls } from "./walls";
 
 const k = kaplay({
@@ -24,7 +24,7 @@ k.loadSprite("doggy", doggyUrl);
 k.loadSprite("flowers2k", flowers2kUrl);
 loadCoinSprites(k);
 loadCoinSounds(k);
-loadStickerChartSprite(k);
+loadStickerChartAssets(k);
 
 k.scene("level1", () => {
     createBackground(k);

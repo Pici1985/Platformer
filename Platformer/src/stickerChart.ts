@@ -1,5 +1,6 @@
 import type { GameObj, KAPLAYCtx } from "kaplay";
 import stickerChartSUrl from "../images/stickerChartS.png";
+import popupSoundUrl from "../sounds/popup.wav";
 import {
     BLUE_COIN_SPRITE,
     CHART_COIN_SIZE,
@@ -7,7 +8,11 @@ import {
     GREEN_COIN_SPRITE,
     RED_COIN_SPRITE,
 } from "./coins";
-import { ALWAYS_SHOW_STICKER_CHART, COINS_TO_WIN } from "./config";
+import {
+    ALWAYS_SHOW_STICKER_CHART,
+    CHART_COIN_SPAWN_DELAY_SEC,
+    COINS_TO_WIN,
+} from "./config";
 import { scaleX, scaleY } from "./layout";
 
 export const STICKER_CHART_WIDTH = 432;
@@ -66,8 +71,45 @@ const CHART_COIN_SLOTS: ChartCoinSlot[] = [
     { sprite: RED_COIN_SPRITE, x: 160, y: 30 },
 ];
 
-export function loadStickerChartSprite(k: KAPLAYCtx) {
+export function loadStickerChartAssets(k: KAPLAYCtx) {
     k.loadSprite("stickerChartS", stickerChartSUrl);
+    k.loadSound("chartCoinPopup", popupSoundUrl);
+}
+
+/** debug.paused suspends the Web Audio context; resume before one-shot UI sounds. */
+function playChartCoinPopup(k: KAPLAYCtx) {
+    void k.audioCtx.resume();
+    k.play("chartCoinPopup");
+}
+
+function startChartCoinReveal(
+    k: KAPLAYCtx,
+    modal: GameObj,
+    coins: ChartCoinObj[],
+    delaySec: number,
+) {
+    let revealed = 0;
+    const startMs = performance.now();
+    let rafId = 0;
+
+    const tick = () => {
+        const elapsedSec = (performance.now() - startMs) / 1000;
+        while (revealed < coins.length && elapsedSec >= revealed * delaySec) {
+            coins[revealed].opacity = 1;
+            playChartCoinPopup(k);
+            revealed++;
+        }
+
+        if (revealed < coins.length) {
+            rafId = requestAnimationFrame(tick);
+        }
+    };
+
+    rafId = requestAnimationFrame(tick);
+
+    modal.onDestroy(() => {
+        cancelAnimationFrame(rafId);
+    });
 }
 
 export function setupCollectionUI(k: KAPLAYCtx) {
@@ -170,6 +212,7 @@ export function setupCollectionUI(k: KAPLAYCtx) {
                 k.sprite(slot.sprite, { width: CHART_COIN_SIZE, height: CHART_COIN_SIZE }),
                 k.pos(slot.x, slot.y),
                 k.anchor("center"),
+                k.opacity(0),
             ]) as ChartCoinObj,
         );
 
@@ -248,6 +291,7 @@ export function setupCollectionUI(k: KAPLAYCtx) {
 
         layoutDialog();
         k.onResize(layoutDialog);
+        startChartCoinReveal(k, modal, chartCoins, CHART_COIN_SPAWN_DELAY_SEC);
     };
 
     layoutCounter();
