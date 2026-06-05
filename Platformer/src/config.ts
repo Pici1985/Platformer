@@ -6,3 +6,6 @@ export const ALWAYS_SHOW_STICKER_CHART = false;
 
 /** Seconds between each sticker-chart coin appearing (first coin is immediate). */
 export const CHART_COIN_SPAWN_DELAY_SEC = 1;
+
+/** When true, reaching the coin goal skips the win modal and goes straight to level 1. */
+export const SKIP_STICKER_CHART = false;

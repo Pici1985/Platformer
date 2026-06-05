@@ -1,18 +1,20 @@
 import type { GameObj, KAPLAYCtx } from "kaplay";
 import { coverSize, viewport } from "./layout";
 
-const FLOWERS2K_SPRITE = "flowers2k";
+export const FLOWERS2K_SPRITE = "flowers2k";
+export const KUKAC2K_SPRITE = "kukac2k";
 
 let background: GameObj | null = null;
+let currentSprite: string | null = null;
 
-function updateBackground(k: KAPLAYCtx) {
-    const flowers = k.getSprite(FLOWERS2K_SPRITE)?.data;
-    if (!flowers) return;
+function updateBackground(k: KAPLAYCtx, spriteName: string) {
+    const spriteData = k.getSprite(spriteName)?.data;
+    if (!spriteData) return;
 
     const { width: viewW, height: viewH } = viewport(k);
     const { width, height, x, y } = coverSize(
-        flowers.width,
-        flowers.height,
+        spriteData.width,
+        spriteData.height,
         viewW,
         viewH,
     );
@@ -25,7 +27,7 @@ function updateBackground(k: KAPLAYCtx) {
     }
 
     background = k.add([
-        k.sprite(FLOWERS2K_SPRITE, { width, height }),
+        k.sprite(spriteName, { width, height }),
         k.pos(x, y),
         k.anchor("topleft"),
         k.fixed(),
@@ -34,7 +36,18 @@ function updateBackground(k: KAPLAYCtx) {
     ]);
 }
 
-export function createBackground(k: KAPLAYCtx) {
-    updateBackground(k);
-    k.onResize(() => updateBackground(k));
+export function createBackground(
+    k: KAPLAYCtx,
+    spriteName: string = FLOWERS2K_SPRITE,
+) {
+    const existing = k.get("background")[0];
+    if (existing && currentSprite !== spriteName) {
+        existing.destroy();
+    }
+
+    background =
+        existing && currentSprite === spriteName ? existing : null;
+    currentSprite = spriteName;
+    updateBackground(k, spriteName);
+    k.onResize(() => updateBackground(k, spriteName));
 }

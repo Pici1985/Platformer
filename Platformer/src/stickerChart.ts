@@ -12,6 +12,7 @@ import {
     ALWAYS_SHOW_STICKER_CHART,
     CHART_COIN_SPAWN_DELAY_SEC,
     COINS_TO_WIN,
+    SKIP_STICKER_CHART,
 } from "./config";
 import { scaleX, scaleY } from "./layout";
 
@@ -29,7 +30,7 @@ const BUTTON_FONT_SIZE = 24;
 
 const HEADER_TEXT = "Level Complete!!";
 const BUTTON_TEXT = "Next Level";
-const NEXT_LEVEL_SCENE = "nextLevel";
+const NEXT_LEVEL_SCENE = "level2";
 
 type TextObj = GameObj & { text: string; textSize: number; width: number; height: number };
 type ChartCoinObj = GameObj & { width: number; height: number; pos: { x: number; y: number } };
@@ -309,7 +310,11 @@ export function setupCollectionUI(k: KAPLAYCtx) {
             updateCounter();
 
             if (collected >= COINS_TO_WIN) {
-                showWinModal();
+                if (SKIP_STICKER_CHART) {
+                    k.go("level2");
+                } else {
+                    showWinModal();
+                }
             }
         },
     };

@@ -1,14 +1,16 @@
 import kaplay from "kaplay";
 import "kaplay/global";
+import cicaMiniUrl from "../images/cicaMini.png";
 import doggyUrl from "../images/doggy.png";
 import flowers2kUrl from "../images/flowers2k.jpg";
+import kukac2kUrl from "../images/kukac2k.jpg";
 import { createBackground } from "./background";
 import { loadCoinSounds, loadCoinSprites, setupCoins } from "./coins";
-import { scaleX, scaleY } from "./layout";
-import { setupNextLevelScene } from "./nextLevel";
+import { setupLevel2 } from "./level2";
 import { createPlatforms } from "./platforms";
 import { loadStickerChartAssets, setupCollectionUI } from "./stickerChart";
 import { createWalls } from "./walls";
+import { createPlayer, setupCicaPlayerSpawn, setupPlayerControls } from "./player";
 
 const k = kaplay({
     width: 1920,
@@ -20,8 +22,10 @@ const k = kaplay({
 
 k.setGravity(1600);
 
+k.loadSprite("cicaMini", cicaMiniUrl);
 k.loadSprite("doggy", doggyUrl);
 k.loadSprite("flowers2k", flowers2kUrl);
+k.loadSprite("kukac2k", kukac2kUrl);
 loadCoinSprites(k);
 loadCoinSounds(k);
 loadStickerChartAssets(k);
@@ -31,39 +35,16 @@ k.scene("level1", () => {
     createPlatforms(k);
     createWalls(k);
 
-    const player = k.add([
-        k.sprite("doggy"),
-        k.pos(scaleX(k, 100), scaleY(k, 200)),
-        k.area(),
-        k.body(),
-        "player",
-    ]);
-
-    const SPEED = 300;
-    const JUMP_FORCE = 800;
-
-    k.onKeyDown("left", () => {
-        player.move(-SPEED, 0);
-        player.flipX = false;
-    });
-
-    k.onKeyDown("right", () => {
-        player.move(SPEED, 0);
-        player.flipX = true;
-    });
-
-    k.onKeyPress("up", () => {
-        if (player.isGrounded()) {
-            player.jump(JUMP_FORCE);
-        }
-    });
+    const player = createPlayer(k);
+    setupPlayerControls(k, player);
+    setupCicaPlayerSpawn(k);
 
     const collectionUI = setupCollectionUI(k);
     setupCoins(k, { onCollect: collectionUI.onCoinCollected });
 });
 
-k.scene("nextLevel", () => {
-    setupNextLevelScene(k);
+k.scene("level2", () => {
+    setupLevel2(k);
 });
 
 k.onLoad(() => {
