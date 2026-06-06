@@ -3,6 +3,7 @@ import { coverSize, viewport } from "./layout";
 
 export const FLOWERS2K_SPRITE = "flowers2k";
 export const KUKAC2K_SPRITE = "kukac2k";
+export const STORM2K_SPRITE = "storm2k";
 
 let background: GameObj | null = null;
 let currentSprite: string | null = null;

@@ -1,6 +1,7 @@
 import type { GameObj, KAPLAYCtx } from "kaplay";
-import stickerChartSUrl from "../images/stickerChartS.png";
-import popupSoundUrl from "../sounds/popup.wav";
+import stickerChartSUrl from "../images/charts/stickerChartS.png";
+import popupSoundUrl from "../sounds/collect.wav";
+import cheerSoundUrl from "../sounds/cheer.mp3";
 import {
     BLUE_COIN_SPRITE,
     CHART_COIN_SIZE,
@@ -30,7 +31,6 @@ const BUTTON_FONT_SIZE = 24;
 
 const HEADER_TEXT = "Level Complete!!";
 const BUTTON_TEXT = "Next Level";
-const NEXT_LEVEL_SCENE = "level2";
 
 type TextObj = GameObj & { text: string; textSize: number; width: number; height: number };
 type ChartCoinObj = GameObj & { width: number; height: number; pos: { x: number; y: number } };
@@ -42,45 +42,64 @@ type ChartCoinSlot = {
     y: number;
 };
 
-/**
- * Per-coin placement on the sticker chart. Edit x/y for each slot; values are
- * relative to the chart sprite (center = 0,0; left/top are negative).
- */
-const CHART_COIN_SLOTS: ChartCoinSlot[] = [
-    { sprite: BLUE_COIN_SPRITE, x: -175, y: -275 },
-    { sprite: GOLD_COIN_SPRITE, x: -185, y: -185 },
-    { sprite: GREEN_COIN_SPRITE, x: -185, y: -80 },
-    { sprite: RED_COIN_SPRITE, x: -185, y: -5 },
-    { sprite: BLUE_COIN_SPRITE, x: -190, y: 95 },
+const CHART_COIN_POSITIONS = [
+    { x: -175, y: -275 },
+    { x: -185, y: -185 },
+    { x: -185, y: -80 },
+    { x: -185, y: -5 },
+    { x: -190, y: 95 },
 
-    { sprite: GOLD_COIN_SPRITE, x: -75, y: -275 },
-    { sprite: GREEN_COIN_SPRITE, x: -70, y: -195 },
-    { sprite: RED_COIN_SPRITE, x: -60, y: -100 },
-    { sprite: BLUE_COIN_SPRITE, x: -60, y: -20 },
-    { sprite: GOLD_COIN_SPRITE, x: -50, y: 105 },
+    { x: -75, y: -275 },
+    { x: -70, y: -195 },
+    { x: -60, y: -100 },
+    { x: -60, y: -20 },
+    { x: -50, y: 105 },
 
-    { sprite: GREEN_COIN_SPRITE, x: 36, y: -285 },
-    { sprite: RED_COIN_SPRITE, x: 36, y: -195 },
-    { sprite: BLUE_COIN_SPRITE, x: 45, y: -125 },
-    { sprite: GOLD_COIN_SPRITE, x: 55, y: -40 },
-    { sprite: GREEN_COIN_SPRITE, x: 75, y: 20 },
+    { x: 36, y: -285 },
+    { x: 36, y: -195 },
+    { x: 45, y: -125 },
+    { x: 55, y: -40 },
+    { x: 75, y: 20 },
 
-    { sprite: RED_COIN_SPRITE, x: 150, y: -275 },
-    { sprite: BLUE_COIN_SPRITE, x: 155, y: -195 },
-    { sprite: GOLD_COIN_SPRITE, x: 160, y: -130 },
-    { sprite: GREEN_COIN_SPRITE, x: 160, y: -65 },
-    { sprite: RED_COIN_SPRITE, x: 160, y: 30 },
-];
+    { x: 150, y: -275 },
+    { x: 155, y: -195 },
+    { x: 160, y: -130 },
+    { x: 160, y: -65 },
+    { x: 160, y: 30 },
+] as const;
+
+const DEFAULT_CHART_SPRITES = [
+    BLUE_COIN_SPRITE,
+    GOLD_COIN_SPRITE,
+    GREEN_COIN_SPRITE,
+    RED_COIN_SPRITE,
+] as const;
+
+function buildChartCoinSlots(sprites: readonly string[]): ChartCoinSlot[] {
+    return CHART_COIN_POSITIONS.map((pos, i) => ({
+        sprite: sprites[i % sprites.length],
+        x: pos.x,
+        y: pos.y,
+    }));
+}
+
+const CHART_COIN_SLOTS = buildChartCoinSlots(DEFAULT_CHART_SPRITES);
 
 export function loadStickerChartAssets(k: KAPLAYCtx) {
     k.loadSprite("stickerChartS", stickerChartSUrl);
     k.loadSound("chartCoinPopup", popupSoundUrl);
+    k.loadSound("chartCoinCheer", cheerSoundUrl);
 }
 
 /** debug.paused suspends the Web Audio context; resume before one-shot UI sounds. */
 function playChartCoinPopup(k: KAPLAYCtx) {
     void k.audioCtx.resume();
     k.play("chartCoinPopup");
+}
+
+function playChartCoinCheer(k: KAPLAYCtx) {
+    void k.audioCtx.resume();
+    k.play("chartCoinCheer");
 }
 
 function startChartCoinReveal(
@@ -101,7 +120,9 @@ function startChartCoinReveal(
             revealed++;
         }
 
-        if (revealed < coins.length) {
+        if (revealed >= coins.length) {
+            playChartCoinCheer(k);
+        } else {
             rafId = requestAnimationFrame(tick);
         }
     };
@@ -113,7 +134,14 @@ function startChartCoinReveal(
     });
 }
 
-export function setupCollectionUI(k: KAPLAYCtx) {
+export function setupCollectionUI(
+    k: KAPLAYCtx,
+    opts?: { nextLevelScene?: string; chartSprites?: readonly string[] },
+) {
+    const nextLevelScene = opts?.nextLevelScene ?? "level2";
+    const chartCoinSlots = opts?.chartSprites
+        ? buildChartCoinSlots(opts.chartSprites)
+        : CHART_COIN_SLOTS;
     let collected = 0;
     let modalShown = false;
 
@@ -208,7 +236,7 @@ export function setupCollectionUI(k: KAPLAYCtx) {
             k.anchor("center"),
         ]) as GameObj & { width: number; height: number; pos: { x: number; y: number } };
 
-        const chartCoins = CHART_COIN_SLOTS.map((slot) =>
+        const chartCoins = chartCoinSlots.map((slot) =>
             chart.add([
                 k.sprite(slot.sprite, { width: CHART_COIN_SIZE, height: CHART_COIN_SIZE }),
                 k.pos(slot.x, slot.y),
@@ -242,7 +270,7 @@ export function setupCollectionUI(k: KAPLAYCtx) {
 
         nextButton.onClick(() => {
             k.debug.paused = false;
-            k.go(NEXT_LEVEL_SCENE);
+            k.go(nextLevelScene);
         });
 
         const layoutDialog = () => {
@@ -275,7 +303,7 @@ export function setupCollectionUI(k: KAPLAYCtx) {
             const scaleChartY = chartH / STICKER_CHART_HEIGHT;
 
             chartCoins.forEach((coin, i) => {
-                const slot = CHART_COIN_SLOTS[i];
+                const slot = chartCoinSlots[i];
                 coin.width = chartCoinW;
                 coin.height = chartCoinH;
                 coin.pos = k.vec2(slot.x * scaleChartX, slot.y * scaleChartY);
@@ -311,7 +339,7 @@ export function setupCollectionUI(k: KAPLAYCtx) {
 
             if (collected >= COINS_TO_WIN) {
                 if (SKIP_STICKER_CHART) {
-                    k.go("level2");
+                    k.go(nextLevelScene);
                 } else {
                     showWinModal();
                 }

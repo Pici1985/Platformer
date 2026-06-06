@@ -1,9 +1,17 @@
 import type { GameObj, KAPLAYCtx } from "kaplay";
-import blueCoinUrl from "../images/blueCoin.png";
-import goldCoinUrl from "../images/goldCoin.png";
-import greenCoinUrl from "../images/greenCoin.png";
-import redCoinUrl from "../images/redCoin.png";
-import collectSoundUrl from "../sounds/collect.wav";
+import blueCoinUrl from "../images/coins/blueCoin.png";
+import cake1Url from "../images/coins/cake1.png";
+import cake2Url from "../images/coins/cake2.png";
+import cake3Url from "../images/coins/cake3.png";
+import cake4Url from "../images/coins/cake4.png";
+import cake5Url from "../images/coins/cake5.png";
+import cake6Url from "../images/coins/cake6.png";
+import cake7Url from "../images/coins/cake7.png";
+import cake8Url from "../images/coins/cake8.png";
+import goldCoinUrl from "../images/coins/goldCoin.png";
+import greenCoinUrl from "../images/coins/greenCoin.png";
+import redCoinUrl from "../images/coins/redCoin.png";
+import collectSoundUrl from "../sounds/popup.mp3";
 import spawnSoundUrl from "../sounds/spawn.wav";
 import { scaleX, scaleY } from "./layout";
 
@@ -27,6 +35,20 @@ const COIN_SPRITES = [
     { name: "redCoin", url: redCoinUrl },
 ] as const;
 
+export const CAKE_SPRITES = [
+    { name: "cake1", url: cake1Url },
+    { name: "cake2", url: cake2Url },
+    { name: "cake3", url: cake3Url },
+    { name: "cake4", url: cake4Url },
+    { name: "cake5", url: cake5Url },
+    { name: "cake6", url: cake6Url },
+    { name: "cake7", url: cake7Url },
+    { name: "cake8", url: cake8Url },
+] as const;
+
+export const CAKE_SPRITE_NAMES = CAKE_SPRITES.map((cake) => cake.name);
+
+type CoinSprite = (typeof COIN_SPRITES)[number] | (typeof CAKE_SPRITES)[number];
 type CoinObj = GameObj & { spinPhase?: number };
 
 export function loadCoinSprites(k: KAPLAYCtx) {
@@ -35,22 +57,28 @@ export function loadCoinSprites(k: KAPLAYCtx) {
     }
 }
 
+export function loadCakeSprites(k: KAPLAYCtx) {
+    for (const cake of CAKE_SPRITES) {
+        k.loadSprite(cake.name, cake.url);
+    }
+}
+
 export function loadCoinSounds(k: KAPLAYCtx) {
     k.loadSound("coinSpawn", spawnSoundUrl);
     k.loadSound("coinCollect", collectSoundUrl);
 }
 
-function randomCoinSprite(k: KAPLAYCtx) {
-    const index = Math.floor(k.rand(0, COIN_SPRITES.length));
-    return COIN_SPRITES[index].name;
+function randomCoinSprite(k: KAPLAYCtx, sprites: readonly CoinSprite[]) {
+    const index = Math.floor(k.rand(0, sprites.length));
+    return sprites[index].name;
 }
 
-function spawnCoin(k: KAPLAYCtx) {
+function spawnCoin(k: KAPLAYCtx, sprites: readonly CoinSprite[]) {
     const width = scaleX(k, COIN_SIZE);
     const height = scaleY(k, COIN_SIZE);
     const x = k.rand(width / 2, k.width() - width / 2);
     const y = k.rand(height / 2, k.height() - height / 2);
-    const sprite = randomCoinSprite(k);
+    const sprite = randomCoinSprite(k, sprites);
 
     const coin = k.add([
         k.sprite(sprite, { width, height }),
@@ -72,7 +100,12 @@ function updateCoinSpin(k: KAPLAYCtx, coin: CoinObj) {
     coin.flipX = facing < 0;
 }
 
-export function setupCoins(k: KAPLAYCtx, opts?: { onCollect?: () => void }) {
+export function setupCoins(
+    k: KAPLAYCtx,
+    opts?: { onCollect?: () => void; sprites?: readonly CoinSprite[] },
+) {
+    const sprites = opts?.sprites ?? COIN_SPRITES;
+
     k.onCollide("player", "coin", (_player, coin) => {
         k.play("coinCollect");
         k.destroy(coin);
@@ -81,5 +114,5 @@ export function setupCoins(k: KAPLAYCtx, opts?: { onCollect?: () => void }) {
 
     k.onUpdate("coin", (coin) => updateCoinSpin(k, coin as CoinObj));
 
-    k.loop(SPAWN_INTERVAL, () => spawnCoin(k));
+    k.loop(SPAWN_INTERVAL, () => spawnCoin(k, sprites));
 }

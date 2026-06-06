@@ -2,7 +2,7 @@ import type { KAPLAYCtx } from "kaplay";
 import { createBackground, KUKAC2K_SPRITE } from "./background";
 import { setupCoins } from "./coins";
 import { createLevel2Platforms } from "./level2Platforms";
-import { createPlayer, setupCicaPlayerSpawn, setupPlayerControls } from "./player";
+import { createPlayer, setupPlayerControls, setupPlayerTwoSpawn } from "./player";
 import { setupCollectionUI } from "./stickerChart";
 import { createWalls } from "./walls";
 
@@ -13,8 +13,8 @@ export function setupLevel2(k: KAPLAYCtx) {
 
     const player = createPlayer(k);
     setupPlayerControls(k, player);
-    setupCicaPlayerSpawn(k);
+    setupPlayerTwoSpawn(k);
 
-    const collectionUI = setupCollectionUI(k);
+    const collectionUI = setupCollectionUI(k, { nextLevelScene: "level3" });
     setupCoins(k, { onCollect: collectionUI.onCoinCollected });
 }

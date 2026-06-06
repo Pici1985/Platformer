@@ -1,13 +1,14 @@
 import type { GameObj, KAPLAYCtx, KEventController } from "kaplay";
+import giggleSoundUrl from "../sounds/giggle.mp3";
 import { DESIGN_WIDTH, scaleX, scaleY } from "./layout";
 
-/** Doggy sprite size in design pixels (see images/doggy.png). */
+/** Doggy sprite size in design pixels (see images/players/doggy.png). */
 const DOGGY_WIDTH = 150;
 const DOGGY_HEIGHT = 100;
 
-/** Cica sprite size in design pixels (see images/cicaMini.png). */
-const CICA_SPRITE_WIDTH = 43;
-const CICA_HITBOX_WIDTH = 40;
+/** Player two sprite size in design pixels. */
+const PLAYER_TWO_SPRITE_WIDTH = 43;
+const PLAYER_TWO_HITBOX_WIDTH = 40;
 
 /** Collision insets (design px); bottom edge stays flush with the sprite. */
 const HITBOX_INSET_LEFT = 3;
@@ -30,15 +31,20 @@ const DOGGY_HITBOX: Hitbox = {
     height: HITBOX_HEIGHT,
 };
 
-const CICA_HITBOX: Hitbox = {
-    offsetX: (CICA_SPRITE_WIDTH - CICA_HITBOX_WIDTH) / 2,
+const PLAYER_TWO_HITBOX: Hitbox = {
+    offsetX: (PLAYER_TWO_SPRITE_WIDTH - PLAYER_TWO_HITBOX_WIDTH) / 2,
     offsetY: HITBOX_INSET_TOP,
-    width: CICA_HITBOX_WIDTH,
+    width: PLAYER_TWO_HITBOX_WIDTH,
     height: HITBOX_HEIGHT,
 };
 
 const SPEED = 300;
 const JUMP_FORCE = 800;
+
+const SPEED_PLAYER_TWO = 320;
+const JUMP_FORCE_PLAYER_TWO = 900;
+
+export const PLAYER_TWO_SPRITE = "playerTwo";
 
 function createCharacter(
     k: KAPLAYCtx,
@@ -62,6 +68,10 @@ function createCharacter(
     ]);
 }
 
+export function loadPlayerSounds(k: KAPLAYCtx) {
+    k.loadSound("playerTwoSpawnGiggle", giggleSoundUrl);
+}
+
 export function createPlayer(
     k: KAPLAYCtx,
     spawnX = 100,
@@ -70,12 +80,12 @@ export function createPlayer(
     return createCharacter(k, "doggy", spawnX, spawnY, DOGGY_HITBOX);
 }
 
-export function createCicaPlayer(
+export function createPlayerTwo(
     k: KAPLAYCtx,
     spawnX = DESIGN_WIDTH - 100,
     spawnY = 200,
 ) {
-    return createCharacter(k, "cicaMini", spawnX, spawnY, CICA_HITBOX);
+    return createCharacter(k, PLAYER_TWO_SPRITE, spawnX, spawnY, PLAYER_TWO_HITBOX);
 }
 
 function setupCharacterControls(
@@ -84,47 +94,69 @@ function setupCharacterControls(
     left: string,
     right: string,
     jump: string,
+    speed: number,
+    jumpForce: number,
 ) {
     return [
         k.onKeyDown(left, () => {
-            player.move(-SPEED, 0);
+            player.move(-speed, 0);
             player.flipX = false;
         }),
         k.onKeyDown(right, () => {
-            player.move(SPEED, 0);
+            player.move(speed, 0);
             player.flipX = true;
         }),
         k.onKeyPress(jump, () => {
             if (player.isGrounded()) {
-                player.jump(JUMP_FORCE);
+                player.jump(jumpForce);
             }
         }),
     ];
 }
 
 export function setupPlayerControls(k: KAPLAYCtx, player: GameObj) {
-    return setupCharacterControls(k, player, "left", "right", "up");
+    return setupCharacterControls(k, player, "left", "right", "up", SPEED, JUMP_FORCE);
 }
 
-function setupCicaPlayerControls(k: KAPLAYCtx, player: GameObj) {
-    return setupCharacterControls(k, player, "a", "d", "w");
+function setupPlayerTwoControls(k: KAPLAYCtx, player: GameObj) {
+    return setupCharacterControls(k, player, "a", "d", "w", SPEED_PLAYER_TWO, JUMP_FORCE_PLAYER_TWO);
 }
 
-/** Spawn cica on numpad +; only one instance at a time. */
-export function setupCicaPlayerSpawn(k: KAPLAYCtx) {
-    let cicaPlayer: GameObj | null = null;
+/** Whether player two is active in the game (persists across levels). */
+let playerTwoActive = false;
+
+/** Spawn player two on numpad +; remove with numpad -; persists to later levels until removed. */
+export function setupPlayerTwoSpawn(k: KAPLAYCtx) {
+    let playerTwo: GameObj | null = null;
     let controls: KEventController[] = [];
 
-    k.onKeyPress("+", () => {
-        if (cicaPlayer) return;
+    const spawnPlayerTwo = (playSound: boolean) => {
+        if (playerTwo) return;
 
-        cicaPlayer = createCicaPlayer(k);
-        controls = setupCicaPlayerControls(k, cicaPlayer);
+        playerTwo = createPlayerTwo(k);
+        if (playSound) k.play("playerTwoSpawnGiggle");
+        controls = setupPlayerTwoControls(k, playerTwo);
 
-        cicaPlayer.onDestroy(() => {
+        playerTwo.onDestroy(() => {
             controls.forEach((c) => c.cancel());
             controls = [];
-            cicaPlayer = null;
+            playerTwo = null;
         });
+    };
+
+    k.onKeyPress("+", () => {
+        if (playerTwo) return;
+        playerTwoActive = true;
+        spawnPlayerTwo(true);
     });
+
+    k.onKeyPress("-", () => {
+        if (!playerTwo) return;
+        playerTwoActive = false;
+        k.destroy(playerTwo);
+    });
+
+    if (playerTwoActive) {
+        spawnPlayerTwo(false);
+    }
 }
