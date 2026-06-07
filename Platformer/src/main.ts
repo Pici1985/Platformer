@@ -1,6 +1,7 @@
 import kaplay from "kaplay";
 import "kaplay/global";
 import playerTwoUrl from "../images/players/cicaMini.png";
+import csikosUrl from "../images/players/csikos.png";
 import doggyUrl from "../images/players/doggy.png";
 import flowers2kUrl from "../images/backgrounds/flowers2k.jpg";
 import kukac2kUrl from "../images/backgrounds/kukac2k.jpg";
@@ -12,7 +13,15 @@ import { setupLevel3 } from "./level3";
 import { createPlatforms } from "./platforms";
 import { loadStickerChartAssets, setupCollectionUI } from "./stickerChart";
 import { createWalls } from "./walls";
-import { createPlayer, loadPlayerSounds, PLAYER_TWO_SPRITE, setupPlayerControls, setupPlayerTwoSpawn } from "./player";
+import { showCharacterSelect } from "./characterSelect";
+import {
+    createPlayer,
+    CSIKOS_SPRITE,
+    loadPlayerSounds,
+    PLAYER_TWO_SPRITE,
+    setupPlayerControls,
+    setupPlayerTwoSpawn,
+} from "./player";
 
 const k = kaplay({
     width: 1920,
@@ -25,6 +34,7 @@ const k = kaplay({
 k.setGravity(1600);
 
 k.loadSprite(PLAYER_TWO_SPRITE, playerTwoUrl);
+k.loadSprite(CSIKOS_SPRITE, csikosUrl);
 k.loadSprite("doggy", doggyUrl);
 k.loadSprite("flowers2k", flowers2kUrl);
 k.loadSprite("kukac2k", kukac2kUrl);
@@ -40,12 +50,14 @@ k.scene("level1", () => {
     createPlatforms(k);
     createWalls(k);
 
-    const player = createPlayer(k);
-    setupPlayerControls(k, player);
-    setupPlayerTwoSpawn(k);
+    showCharacterSelect(k, () => {
+        const player = createPlayer(k);
+        setupPlayerControls(k, player);
+        setupPlayerTwoSpawn(k);
 
-    const collectionUI = setupCollectionUI(k);
-    setupCoins(k, { onCollect: collectionUI.onCoinCollected });
+        const collectionUI = setupCollectionUI(k);
+        setupCoins(k, { onCollect: collectionUI.onCoinCollected });
+    });
 });
 
 k.scene("level2", () => {

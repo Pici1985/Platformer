@@ -45,6 +45,59 @@ const SPEED_PLAYER_TWO = 320;
 const JUMP_FORCE_PLAYER_TWO = 900;
 
 export const PLAYER_TWO_SPRITE = "playerTwo";
+export const CSIKOS_SPRITE = "csikos";
+
+/** Csikos sprite size in design pixels. */
+const CSIKOS_WIDTH = 73;
+
+export type PlayerCharacterId = "doggy" | "playerTwo" | "csikos";
+
+type CharacterDef = {
+    id: PlayerCharacterId;
+    sprite: string;
+    previewWidth: number;
+    previewHeight: number;
+    hitbox: Hitbox;
+};
+
+const CSIKOS_HITBOX: Hitbox = {
+    offsetX: HITBOX_INSET_LEFT,
+    offsetY: HITBOX_INSET_TOP,
+    width: CSIKOS_WIDTH - HITBOX_INSET_LEFT - HITBOX_INSET_RIGHT,
+    height: HITBOX_HEIGHT,
+};
+
+export const CHARACTER_OPTIONS: readonly CharacterDef[] = [
+    { id: "doggy", sprite: "doggy", previewWidth: DOGGY_WIDTH, previewHeight: DOGGY_HEIGHT, hitbox: DOGGY_HITBOX },
+    {
+        id: "playerTwo",
+        sprite: PLAYER_TWO_SPRITE,
+        previewWidth: PLAYER_TWO_SPRITE_WIDTH,
+        previewHeight: DOGGY_HEIGHT,
+        hitbox: PLAYER_TWO_HITBOX,
+    },
+    {
+        id: "csikos",
+        sprite: CSIKOS_SPRITE,
+        previewWidth: CSIKOS_WIDTH,
+        previewHeight: DOGGY_HEIGHT,
+        hitbox: CSIKOS_HITBOX,
+    },
+] as const;
+
+const CHARACTER_BY_ID = Object.fromEntries(
+    CHARACTER_OPTIONS.map((c) => [c.id, c]),
+) as Record<PlayerCharacterId, CharacterDef>;
+
+let selectedCharacterId: PlayerCharacterId = "doggy";
+
+export function setSelectedCharacter(id: PlayerCharacterId) {
+    selectedCharacterId = id;
+}
+
+export function getSelectedCharacter(): PlayerCharacterId {
+    return selectedCharacterId;
+}
 
 function createCharacter(
     k: KAPLAYCtx,
@@ -77,7 +130,8 @@ export function createPlayer(
     spawnX = 100,
     spawnY = 200,
 ) {
-    return createCharacter(k, "doggy", spawnX, spawnY, DOGGY_HITBOX);
+    const character = CHARACTER_BY_ID[selectedCharacterId];
+    return createCharacter(k, character.sprite, spawnX, spawnY, character.hitbox);
 }
 
 export function createPlayerTwo(
