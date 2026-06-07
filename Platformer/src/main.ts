@@ -13,7 +13,7 @@ import { setupLevel3 } from "./level3";
 import { createPlatforms } from "./platforms";
 import { loadStickerChartAssets, setupCollectionUI } from "./stickerChart";
 import { createWalls } from "./walls";
-import { showCharacterSelect } from "./characterSelect";
+import { loadCharacterSelectSounds, showCharacterSelect } from "./characterSelect";
 import {
     createPlayer,
     CSIKOS_SPRITE,
@@ -43,6 +43,7 @@ loadCoinSprites(k);
 loadCakeSprites(k);
 loadCoinSounds(k);
 loadPlayerSounds(k);
+loadCharacterSelectSounds(k);
 loadStickerChartAssets(k);
 
 k.scene("level1", () => {

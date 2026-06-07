@@ -1,10 +1,22 @@
 import type { GameObj, KAPLAYCtx } from "kaplay";
+import meowSoundUrl from "../sounds/meow.mp3";
+import woof2SoundUrl from "../sounds/woof2.mp3";
 import { scaleX, scaleY } from "./layout";
 import {
     CHARACTER_OPTIONS,
     type PlayerCharacterId,
     setSelectedCharacter,
 } from "./player";
+
+export function loadCharacterSelectSounds(k: KAPLAYCtx) {
+    k.loadSound("characterSelectWoof", woof2SoundUrl);
+    k.loadSound("characterSelectMeow", meowSoundUrl);
+}
+
+function playSelectionSound(k: KAPLAYCtx, characterId: PlayerCharacterId) {
+    void k.audioCtx.resume();
+    k.play(characterId === "doggy" ? "characterSelectWoof" : "characterSelectMeow");
+}
 
 const HEADER_TEXT = "Select character";
 const HEADER_FONT_SIZE = 32;
@@ -105,6 +117,7 @@ export function showCharacterSelect(
             const color = selected ? SELECTED_BORDER_COLOR : UNSELECTED_BORDER_COLOR;
             slot.border.use(k.color(color[0], color[1], color[2]));
         });
+        playSelectionSound(k, slots[selectedIndex].id);
     };
 
     const layoutDialog = () => {

@@ -1,5 +1,8 @@
 import type { GameObj, KAPLAYCtx, KEventController } from "kaplay";
+import byeSoundUrl from "../sounds/bye.mp3";
 import giggleSoundUrl from "../sounds/giggle.mp3";
+import meowSoundUrl from "../sounds/meow.mp3";
+import woof2SoundUrl from "../sounds/woof2.mp3";
 import { DESIGN_WIDTH, scaleX, scaleY } from "./layout";
 
 /** Doggy sprite size in design pixels (see images/players/doggy.png). */
@@ -68,7 +71,13 @@ const CSIKOS_HITBOX: Hitbox = {
 };
 
 export const CHARACTER_OPTIONS: readonly CharacterDef[] = [
-    { id: "doggy", sprite: "doggy", previewWidth: DOGGY_WIDTH, previewHeight: DOGGY_HEIGHT, hitbox: DOGGY_HITBOX },
+    {
+        id: "doggy",
+        sprite: "doggy",
+        previewWidth: DOGGY_WIDTH,
+        previewHeight: DOGGY_HEIGHT,
+        hitbox: DOGGY_HITBOX,
+    },
     {
         id: "playerTwo",
         sprite: PLAYER_TWO_SPRITE,
@@ -123,6 +132,13 @@ function createCharacter(
 
 export function loadPlayerSounds(k: KAPLAYCtx) {
     k.loadSound("playerTwoSpawnGiggle", giggleSoundUrl);
+    k.loadSound("playerTwoDespawnBye", byeSoundUrl);
+    k.loadSound("playerJumpWoof", woof2SoundUrl);
+    k.loadSound("playerJumpMeow", meowSoundUrl);
+}
+
+function playJumpSound(k: KAPLAYCtx, isDoggy: boolean) {
+    k.play(isDoggy ? "playerJumpWoof" : "playerJumpMeow");
 }
 
 export function createPlayer(
@@ -150,6 +166,7 @@ function setupCharacterControls(
     jump: string,
     speed: number,
     jumpForce: number,
+    jumpSoundIsDoggy: boolean,
 ) {
     return [
         k.onKeyDown(left, () => {
@@ -163,17 +180,36 @@ function setupCharacterControls(
         k.onKeyPress(jump, () => {
             if (player.isGrounded()) {
                 player.jump(jumpForce);
+                playJumpSound(k, jumpSoundIsDoggy);
             }
         }),
     ];
 }
 
 export function setupPlayerControls(k: KAPLAYCtx, player: GameObj) {
-    return setupCharacterControls(k, player, "left", "right", "up", SPEED, JUMP_FORCE);
+    return setupCharacterControls(
+        k,
+        player,
+        "left",
+        "right",
+        "up",
+        SPEED,
+        JUMP_FORCE,
+        getSelectedCharacter() === "doggy",
+    );
 }
 
 function setupPlayerTwoControls(k: KAPLAYCtx, player: GameObj) {
-    return setupCharacterControls(k, player, "a", "d", "w", SPEED_PLAYER_TWO, JUMP_FORCE_PLAYER_TWO);
+    return setupCharacterControls(
+        k,
+        player,
+        "a",
+        "d",
+        "w",
+        SPEED_PLAYER_TWO,
+        JUMP_FORCE_PLAYER_TWO,
+        false,
+    );
 }
 
 /** Whether player two is active in the game (persists across levels). */
@@ -207,6 +243,7 @@ export function setupPlayerTwoSpawn(k: KAPLAYCtx) {
     k.onKeyPress("-", () => {
         if (!playerTwo) return;
         playerTwoActive = false;
+        k.play("playerTwoDespawnBye");
         k.destroy(playerTwo);
     });
 
