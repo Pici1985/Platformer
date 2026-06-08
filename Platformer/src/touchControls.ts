@@ -10,11 +10,11 @@ import {
 
 export const ARROW_SPRITE = "arrowToUse";
 
-const BUTTON_RADIUS = 56;
-const BUTTON_MARGIN = 40;
-const BUTTON_GAP = 24;
+const BUTTON_RADIUS = 76;
+const BUTTON_MARGIN = 36;
+const BUTTON_GAP = 20;
 const BUTTON_OPACITY = 0.45;
-const ARROW_ICON_SIZE = 36;
+const ARROW_ICON_SIZE = 52;
 const CONTROLS_Z = 1500;
 
 type ArrowDirection = "left" | "right" | "up";
@@ -27,7 +27,20 @@ type ArrowIcon = GameObj & {
 };
 type RoundButton = GameObj & { radius: number; pos: Vec2 };
 
+/** True on phones/tablets where touch is the primary input. */
+export function shouldShowTouchControls() {
+    if (typeof window === "undefined") return false;
+
+    const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
+    const noHover = window.matchMedia("(hover: none)").matches;
+    const hasTouch = navigator.maxTouchPoints > 0;
+
+    return hasTouch && (coarsePointer || noHover);
+}
+
 export function loadTouchControlAssets(k: KAPLAYCtx) {
+    if (!shouldShowTouchControls()) return;
+
     k.loadSprite(ARROW_SPRITE, arrowToUseUrl);
 }
 
@@ -76,6 +89,8 @@ function createRoundButton(
 }
 
 export function setupTouchControls(k: KAPLAYCtx, player: GameObj) {
+    if (!shouldShowTouchControls()) return;
+
     const controls = getPlayerOneControls(k);
 
     const root = k.add([k.fixed(), k.z(CONTROLS_Z)]);
@@ -97,10 +112,11 @@ export function setupTouchControls(k: KAPLAYCtx, player: GameObj) {
         const iconSize = scaleUniform(k, ARROW_ICON_SIZE);
         const bottomY = k.height() - margin - radius;
         const leftX = margin + radius;
+        const columnStep = radius * 2 + gap;
 
         for (const [btn, icon, pos] of [
-            [leftBtn, leftIcon, k.vec2(leftX, bottomY)],
-            [rightBtn, rightIcon, k.vec2(leftX + radius * 2 + gap, bottomY)],
+            [leftBtn, leftIcon, k.vec2(leftX, bottomY - columnStep)],
+            [rightBtn, rightIcon, k.vec2(leftX, bottomY)],
             [jumpBtn, jumpIcon, k.vec2(k.width() - margin - radius, bottomY)],
         ] as const) {
             btn.radius = radius;
