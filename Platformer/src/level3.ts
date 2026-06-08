@@ -3,6 +3,7 @@ import { createBackground, STORM2K_SPRITE } from "./background";
 import { CAKE_SPRITE_NAMES, CAKE_SPRITES, setupCoins } from "./coins";
 import { createLevel3Platforms } from "./level3Platforms";
 import { createPlayer, setupPlayerControls, setupPlayerTwoSpawn } from "./player";
+import { setupTouchControls } from "./touchControls";
 import { setupCollectionUI } from "./stickerChart";
 import { createWalls } from "./walls";
 
@@ -13,6 +14,7 @@ export function setupLevel3(k: KAPLAYCtx) {
 
     const player = createPlayer(k);
     setupPlayerControls(k, player);
+    setupTouchControls(k, player);
     setupPlayerTwoSpawn(k);
 
     const collectionUI = setupCollectionUI(k, {

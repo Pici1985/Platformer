@@ -15,7 +15,7 @@ import {
     COINS_TO_WIN,
     SKIP_STICKER_CHART,
 } from "./config";
-import { scaleX, scaleY } from "./layout";
+import { scaleUniform, scaleX, scaleY } from "./layout";
 
 export const STICKER_CHART_WIDTH = 432;
 export const STICKER_CHART_HEIGHT = 648;
@@ -297,8 +297,9 @@ export function setupCollectionUI(
             chart.height = chartH;
             chart.pos = k.vec2(0, -modalH / 2 + headerH + chartH / 2);
 
-            const chartCoinW = scaleX(k, CHART_COIN_SIZE);
-            const chartCoinH = scaleY(k, CHART_COIN_SIZE);
+            const chartCoinSize = scaleUniform(k, CHART_COIN_SIZE);
+            const chartCoinW = chartCoinSize;
+            const chartCoinH = chartCoinSize;
             const scaleChartX = chartW / STICKER_CHART_WIDTH;
             const scaleChartY = chartH / STICKER_CHART_HEIGHT;
 

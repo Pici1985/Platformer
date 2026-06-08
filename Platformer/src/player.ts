@@ -3,7 +3,13 @@ import byeSoundUrl from "../sounds/bye.mp3";
 import giggleSoundUrl from "../sounds/giggle.mp3";
 import meowSoundUrl from "../sounds/meow.mp3";
 import woof2SoundUrl from "../sounds/woof2.mp3";
-import { DESIGN_WIDTH, scaleX, scaleY } from "./layout";
+import {
+    DESIGN_WIDTH,
+    scalePhysics,
+    scaleSize,
+    scaleX,
+    scaleY,
+} from "./layout";
 
 /** Doggy sprite size in design pixels (see images/players/doggy.png). */
 const DOGGY_WIDTH = 150;
@@ -108,23 +114,29 @@ export function getSelectedCharacter(): PlayerCharacterId {
     return selectedCharacterId;
 }
 
+function scaledHitbox(k: KAPLAYCtx, hitbox: Hitbox) {
+    return new k.Rect(
+        k.vec2(scaleX(k, hitbox.offsetX), scaleY(k, hitbox.offsetY)),
+        scaleX(k, hitbox.width),
+        scaleY(k, hitbox.height),
+    );
+}
+
 function createCharacter(
     k: KAPLAYCtx,
     sprite: string,
     spawnX: number,
     spawnY: number,
+    spriteWidth: number,
+    spriteHeight: number,
     hitbox: Hitbox,
 ) {
+    const { width, height } = scaleSize(k, spriteWidth, spriteHeight);
+
     return k.add([
-        k.sprite(sprite),
+        k.sprite(sprite, { width, height }),
         k.pos(scaleX(k, spawnX), scaleY(k, spawnY)),
-        k.area({
-            shape: new k.Rect(
-                k.vec2(hitbox.offsetX, hitbox.offsetY),
-                hitbox.width,
-                hitbox.height,
-            ),
-        }),
+        k.area({ shape: scaledHitbox(k, hitbox) }),
         k.body(),
         "player",
     ]);
@@ -141,13 +153,51 @@ function playJumpSound(k: KAPLAYCtx, isDoggy: boolean) {
     k.play(isDoggy ? "playerJumpWoof" : "playerJumpMeow");
 }
 
+export function movePlayerLeft(player: GameObj, speed: number) {
+    player.move(-speed, 0);
+    player.flipX = false;
+}
+
+export function movePlayerRight(player: GameObj, speed: number) {
+    player.move(speed, 0);
+    player.flipX = true;
+}
+
+export function jumpPlayer(
+    k: KAPLAYCtx,
+    player: GameObj,
+    jumpForce: number,
+    jumpSoundIsDoggy: boolean,
+) {
+    if (player.isGrounded()) {
+        player.jump(jumpForce);
+        playJumpSound(k, jumpSoundIsDoggy);
+    }
+}
+
+export function getPlayerOneControls(k: KAPLAYCtx) {
+    return {
+        speed: scalePhysics(k, SPEED),
+        jumpForce: scalePhysics(k, JUMP_FORCE),
+        jumpSoundIsDoggy: getSelectedCharacter() === "doggy",
+    };
+}
+
 export function createPlayer(
     k: KAPLAYCtx,
     spawnX = 100,
     spawnY = 200,
 ) {
     const character = CHARACTER_BY_ID[selectedCharacterId];
-    return createCharacter(k, character.sprite, spawnX, spawnY, character.hitbox);
+    return createCharacter(
+        k,
+        character.sprite,
+        spawnX,
+        spawnY,
+        character.previewWidth,
+        character.previewHeight,
+        character.hitbox,
+    );
 }
 
 export function createPlayerTwo(
@@ -155,7 +205,15 @@ export function createPlayerTwo(
     spawnX = DESIGN_WIDTH - 100,
     spawnY = 200,
 ) {
-    return createCharacter(k, PLAYER_TWO_SPRITE, spawnX, spawnY, PLAYER_TWO_HITBOX);
+    return createCharacter(
+        k,
+        PLAYER_TWO_SPRITE,
+        spawnX,
+        spawnY,
+        PLAYER_TWO_SPRITE_WIDTH,
+        DOGGY_HEIGHT,
+        PLAYER_TWO_HITBOX,
+    );
 }
 
 function setupCharacterControls(
@@ -169,20 +227,11 @@ function setupCharacterControls(
     jumpSoundIsDoggy: boolean,
 ) {
     return [
-        k.onKeyDown(left, () => {
-            player.move(-speed, 0);
-            player.flipX = false;
-        }),
-        k.onKeyDown(right, () => {
-            player.move(speed, 0);
-            player.flipX = true;
-        }),
-        k.onKeyPress(jump, () => {
-            if (player.isGrounded()) {
-                player.jump(jumpForce);
-                playJumpSound(k, jumpSoundIsDoggy);
-            }
-        }),
+        k.onKeyDown(left, () => movePlayerLeft(player, speed)),
+        k.onKeyDown(right, () => movePlayerRight(player, speed)),
+        k.onKeyPress(jump, () =>
+            jumpPlayer(k, player, jumpForce, jumpSoundIsDoggy),
+        ),
     ];
 }
 
@@ -193,8 +242,8 @@ export function setupPlayerControls(k: KAPLAYCtx, player: GameObj) {
         "left",
         "right",
         "up",
-        SPEED,
-        JUMP_FORCE,
+        scalePhysics(k, SPEED),
+        scalePhysics(k, JUMP_FORCE),
         getSelectedCharacter() === "doggy",
     );
 }
@@ -206,8 +255,8 @@ function setupPlayerTwoControls(k: KAPLAYCtx, player: GameObj) {
         "a",
         "d",
         "w",
-        SPEED_PLAYER_TWO,
-        JUMP_FORCE_PLAYER_TWO,
+        scalePhysics(k, SPEED_PLAYER_TWO),
+        scalePhysics(k, JUMP_FORCE_PLAYER_TWO),
         false,
     );
 }

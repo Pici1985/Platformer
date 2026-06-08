@@ -14,6 +14,7 @@ import { createPlatforms } from "./platforms";
 import { loadStickerChartAssets, setupCollectionUI } from "./stickerChart";
 import { createWalls } from "./walls";
 import { loadCharacterSelectSounds, showCharacterSelect } from "./characterSelect";
+import { DESIGN_GRAVITY, DESIGN_HEIGHT, DESIGN_WIDTH, scalePhysics } from "./layout";
 import {
     createPlayer,
     CSIKOS_SPRITE,
@@ -22,16 +23,17 @@ import {
     setupPlayerControls,
     setupPlayerTwoSpawn,
 } from "./player";
+import { loadTouchControlAssets, setupTouchControls } from "./touchControls";
 
 const k = kaplay({
-    width: 1920,
-    height: 1080,
+    width: DESIGN_WIDTH,
+    height: DESIGN_HEIGHT,
     stretch: true,
-    letterbox: false,
-    background: [255, 255, 255],
+    letterbox: true,
+    background: [0, 0, 0],
 });
 
-k.setGravity(1600);
+k.setGravity(scalePhysics(k, DESIGN_GRAVITY));
 
 k.loadSprite(PLAYER_TWO_SPRITE, playerTwoUrl);
 k.loadSprite(CSIKOS_SPRITE, csikosUrl);
@@ -45,6 +47,7 @@ loadCoinSounds(k);
 loadPlayerSounds(k);
 loadCharacterSelectSounds(k);
 loadStickerChartAssets(k);
+loadTouchControlAssets(k);
 
 k.scene("level1", () => {
     createBackground(k);
@@ -54,6 +57,7 @@ k.scene("level1", () => {
     showCharacterSelect(k, () => {
         const player = createPlayer(k);
         setupPlayerControls(k, player);
+        setupTouchControls(k, player);
         setupPlayerTwoSpawn(k);
 
         const collectionUI = setupCollectionUI(k);

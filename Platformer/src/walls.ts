@@ -2,6 +2,7 @@ import type { KAPLAYCtx } from "kaplay";
 import {
     LEFT_WALL_WIDTH,
     RIGHT_WALL_WIDTH,
+    TOP_WALL_HEIGHT,
     scaleX,
     scaleY,
     viewport,
@@ -30,6 +31,15 @@ export function createWalls(k: KAPLAYCtx) {
     k.add([
         k.rect(rightWidth, height),
         k.pos(width - rightWidth, 0),
+        k.area(),
+        k.body({ isStatic: true }),
+        k.color(WALL_COLOR[0], WALL_COLOR[1], WALL_COLOR[2]),
+        "platform",
+    ]);
+
+    k.add([
+        k.rect(width, scaleY(k, TOP_WALL_HEIGHT)),
+        k.pos(0, 0),
         k.area(),
         k.body({ isStatic: true }),
         k.color(WALL_COLOR[0], WALL_COLOR[1], WALL_COLOR[2]),

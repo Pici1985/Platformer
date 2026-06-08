@@ -1,4 +1,4 @@
-import type { GameObj, KAPLAYCtx } from "kaplay";
+import type { GameObj, KAPLAYCtx, KEventController } from "kaplay";
 import meowSoundUrl from "../sounds/meow.mp3";
 import woof2SoundUrl from "../sounds/woof2.mp3";
 import { scaleX, scaleY } from "./layout";
@@ -32,7 +32,7 @@ type TextObj = GameObj & { text: string; textSize: number; width: number; height
 type OptionSlot = {
     id: PlayerCharacterId;
     root: GameObj;
-    border: GameObj & { width: number; height: number };
+    border: GameObj & { width: number; height: number; color: ReturnType<KAPLAYCtx["rgb"]> };
     sprite: GameObj & { width: number; height: number };
     previewWidth: number;
     previewHeight: number;
@@ -93,6 +93,7 @@ export function showCharacterSelect(
         const border = slotRoot.add([
             k.rect(1, 1),
             k.anchor("center"),
+            k.area({ cursor: "pointer" }),
             k.color(...UNSELECTED_BORDER_COLOR),
         ]) as OptionSlot["border"];
 
@@ -115,7 +116,7 @@ export function showCharacterSelect(
         slots.forEach((slot, i) => {
             const selected = i === selectedIndex;
             const color = selected ? SELECTED_BORDER_COLOR : UNSELECTED_BORDER_COLOR;
-            slot.border.use(k.color(color[0], color[1], color[2]));
+            slot.border.color = k.rgb(color[0], color[1], color[2]);
         });
         playSelectionSound(k, slots[selectedIndex].id);
     };
@@ -186,9 +187,17 @@ export function showCharacterSelect(
 
     const keyEnter = k.onKeyPress("enter", confirm);
 
+    const clickHandlers: KEventController[] = slots.map((slot, i) =>
+        slot.border.onClick(() => {
+            selectedIndex = i;
+            confirm();
+        }),
+    );
+
     modal.onDestroy(() => {
         keyLeft.cancel();
         keyRight.cancel();
         keyEnter.cancel();
+        clickHandlers.forEach((handler) => handler.cancel());
     });
 }

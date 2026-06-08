@@ -13,7 +13,7 @@ import greenCoinUrl from "../images/coins/greenCoin.png";
 import redCoinUrl from "../images/coins/redCoin.png";
 import collectSoundUrl from "../sounds/popup.mp3";
 import spawnSoundUrl from "../sounds/spawn.wav";
-import { scaleX, scaleY } from "./layout";
+import { scaleUniform } from "./layout";
 
 const COIN_SIZE = 50;
 
@@ -74,8 +74,9 @@ function randomCoinSprite(k: KAPLAYCtx, sprites: readonly CoinSprite[]) {
 }
 
 function spawnCoin(k: KAPLAYCtx, sprites: readonly CoinSprite[]) {
-    const width = scaleX(k, COIN_SIZE);
-    const height = scaleY(k, COIN_SIZE);
+    const size = scaleUniform(k, COIN_SIZE);
+    const width = size;
+    const height = size;
     const x = k.rand(width / 2, k.width() - width / 2);
     const y = k.rand(height / 2, k.height() - height / 2);
     const sprite = randomCoinSprite(k, sprites);
