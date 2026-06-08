@@ -10,11 +10,11 @@ import {
 
 export const ARROW_SPRITE = "arrowToUse";
 
-const BUTTON_RADIUS = 76;
+const BUTTON_RADIUS = 96;
 const BUTTON_MARGIN = 36;
-const BUTTON_GAP = 20;
+const BUTTON_GAP = 24;
 const BUTTON_OPACITY = 0.45;
-const ARROW_ICON_SIZE = 52;
+const ARROW_ICON_SIZE = 64;
 const CONTROLS_Z = 1500;
 
 type ArrowDirection = "left" | "right" | "up";
@@ -112,11 +112,11 @@ export function setupTouchControls(k: KAPLAYCtx, player: GameObj) {
         const iconSize = scaleUniform(k, ARROW_ICON_SIZE);
         const bottomY = k.height() - margin - radius;
         const leftX = margin + radius;
-        const columnStep = radius * 2 + gap;
+        const rowStep = radius * 2 + gap;
 
         for (const [btn, icon, pos] of [
-            [leftBtn, leftIcon, k.vec2(leftX, bottomY - columnStep)],
-            [rightBtn, rightIcon, k.vec2(leftX, bottomY)],
+            [leftBtn, leftIcon, k.vec2(leftX, bottomY)],
+            [rightBtn, rightIcon, k.vec2(leftX + rowStep, bottomY)],
             [jumpBtn, jumpIcon, k.vec2(k.width() - margin - radius, bottomY)],
         ] as const) {
             btn.radius = radius;
