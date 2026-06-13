@@ -1,21 +1,21 @@
 import type { GameObj, KAPLAYCtx } from "kaplay";
-import stickerChartSUrl from "../images/charts/stickerChartS.png";
-import popupSoundUrl from "../sounds/collect.wav";
-import cheerSoundUrl from "../sounds/cheer.mp3";
+import { scaleUniform, scaleX, scaleY } from "../Base/layout";
+import {
+    ALWAYS_SHOW_STICKER_CHART,
+    CHART_COIN_SPAWN_DELAY_SEC,
+    COINS_TO_WIN,
+    SKIP_STICKER_CHART,
+} from "../config";
+import stickerChartSUrl from "../../images/charts/stickerChartS.png";
+import cheerSoundUrl from "../../sounds/cheer.mp3";
+import popupSoundUrl from "../../sounds/collect.wav";
 import {
     BLUE_COIN_SPRITE,
     CHART_COIN_SIZE,
     GOLD_COIN_SPRITE,
     GREEN_COIN_SPRITE,
     RED_COIN_SPRITE,
-} from "./coins";
-import {
-    ALWAYS_SHOW_STICKER_CHART,
-    CHART_COIN_SPAWN_DELAY_SEC,
-    COINS_TO_WIN,
-    SKIP_STICKER_CHART,
-} from "./config";
-import { scaleUniform, scaleX, scaleY } from "./layout";
+} from "../Models/coins";
 
 export const STICKER_CHART_WIDTH = 432;
 export const STICKER_CHART_HEIGHT = 648;

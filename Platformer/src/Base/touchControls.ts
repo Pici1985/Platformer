@@ -1,12 +1,12 @@
 import type { GameObj, KAPLAYCtx, KEventController, Vec2 } from "kaplay";
-import arrowToUseUrl from "../images/arrowOneNoBg.png";
+import arrowToUseUrl from "../../images/arrowOneNoBg.png";
 import { scaleUniform } from "./layout";
 import {
     getPlayerOneControls,
     jumpPlayer,
     movePlayerLeft,
     movePlayerRight,
-} from "./player";
+} from "../Models/player";
 
 export const ARROW_SPRITE = "arrowToUse";
 

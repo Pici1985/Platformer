@@ -26,6 +26,7 @@ export function createWalls(k: KAPLAYCtx) {
         k.body({ isStatic: true }),
         k.color(WALL_COLOR[0], WALL_COLOR[1], WALL_COLOR[2]),
         "platform",
+        "wall",
     ]);
 
     k.add([
@@ -35,6 +36,7 @@ export function createWalls(k: KAPLAYCtx) {
         k.body({ isStatic: true }),
         k.color(WALL_COLOR[0], WALL_COLOR[1], WALL_COLOR[2]),
         "platform",
+        "wall",
     ]);
 
     k.add([

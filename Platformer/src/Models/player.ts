@@ -1,15 +1,15 @@
 import type { GameObj, KAPLAYCtx, KEventController } from "kaplay";
-import byeSoundUrl from "../sounds/bye.mp3";
-import giggleSoundUrl from "../sounds/giggle.mp3";
-import meowSoundUrl from "../sounds/meow.mp3";
-import woof2SoundUrl from "../sounds/woof2.mp3";
+import byeSoundUrl from "../../sounds/bye.mp3";
+import giggleSoundUrl from "../../sounds/giggle.mp3";
+import meowSoundUrl from "../../sounds/meow.mp3";
+import woof2SoundUrl from "../../sounds/woof2.mp3";
 import {
     DESIGN_WIDTH,
     scalePhysics,
     scaleSize,
     scaleX,
     scaleY,
-} from "./layout";
+} from "../Base/layout";
 
 /** Doggy sprite size in design pixels (see images/players/doggy.png). */
 const DOGGY_WIDTH = 150;

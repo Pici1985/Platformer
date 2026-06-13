@@ -1,12 +1,12 @@
 import type { GameObj, KAPLAYCtx, KEventController } from "kaplay";
-import meowSoundUrl from "../sounds/meow.mp3";
-import woof2SoundUrl from "../sounds/woof2.mp3";
-import { scaleX, scaleY } from "./layout";
+import { scaleX, scaleY } from "../Base/layout";
 import {
     CHARACTER_OPTIONS,
     type PlayerCharacterId,
     setSelectedCharacter,
-} from "./player";
+} from "../Models/player";
+import meowSoundUrl from "../../sounds/meow.mp3";
+import woof2SoundUrl from "../../sounds/woof2.mp3";
 
 export function loadCharacterSelectSounds(k: KAPLAYCtx) {
     k.loadSound("characterSelectWoof", woof2SoundUrl);

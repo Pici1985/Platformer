@@ -1,11 +1,11 @@
 import type { KAPLAYCtx } from "kaplay";
-import { createBackground, STORM2K_SPRITE } from "./background";
-import { CAKE_SPRITE_NAMES, CAKE_SPRITES, setupCoins } from "./coins";
+import { createBackground, STORM2K_SPRITE } from "../Base/background";
+import { setupTouchControls } from "../Base/touchControls";
+import { createWalls } from "../Base/walls";
+import { setupCollectionUI } from "../Dialogs/stickerChart";
+import { createPlayer, setupPlayerControls, setupPlayerTwoSpawn } from "../Models/player";
+import { CAKE_SPRITE_NAMES, CAKE_SPRITES, setupCoins } from "../Models/coins";
 import { createLevel3Platforms } from "./level3Platforms";
-import { createPlayer, setupPlayerControls, setupPlayerTwoSpawn } from "./player";
-import { setupTouchControls } from "./touchControls";
-import { setupCollectionUI } from "./stickerChart";
-import { createWalls } from "./walls";
 
 export function setupLevel3(k: KAPLAYCtx) {
     createBackground(k, STORM2K_SPRITE);

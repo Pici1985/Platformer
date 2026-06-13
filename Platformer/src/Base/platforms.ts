@@ -1,11 +1,5 @@
 import type { KAPLAYCtx } from "kaplay";
-import {
-    DESIGN_WIDTH,
-    LEFT_WALL_WIDTH,
-    RIGHT_WALL_WIDTH,
-    scaleX,
-    scaleY,
-} from "./layout";
+import { scaleX, scaleY } from "./layout";
 
 export const PLATFORM_WIDTH = 150;
 export const PLATFORM_HEIGHT = 24;
@@ -16,8 +10,6 @@ export type PlatformDef = {
     xPosition: number;
     yPosition: number;
 };
-
-const PLATFORM_COLOR = [139, 90, 43] as const;
 
 const SHADOW_OFFSET_X = 0;
 const SHADOW_OFFSET_Y = 6;
@@ -66,29 +58,4 @@ export function createPlatformsFromDefs(
     for (const { width, height, xPosition, yPosition } of defs) {
         addPlatform(k, width, height, xPosition, yPosition, color);
     }
-}
-
-const LEVEL1_PLATFORM_DEFS: PlatformDef[] = [
-    // Floating platforms left side
-    { width: 590, height: PLATFORM_HEIGHT, xPosition: LEFT_WALL_WIDTH, yPosition: 185 },
-    { width: 250, height: PLATFORM_HEIGHT, xPosition: 250, yPosition: 555 },
-    { width: PLATFORM_WIDTH, height: PLATFORM_HEIGHT, xPosition: 0, yPosition: 725 },
-    { width: 200, height: 24, xPosition: 250, yPosition: 915 },
-    // Floating platforms middle
-    { width: 600, height: PLATFORM_HEIGHT, xPosition: 600, yPosition: 375 },
-    { width: 600, height: PLATFORM_HEIGHT, xPosition: 600, yPosition: 725 },
-    // Floating platforms right side
-    {
-        width: 550,
-        height: PLATFORM_HEIGHT,
-        xPosition: DESIGN_WIDTH - RIGHT_WALL_WIDTH - 500,
-        yPosition: 185,
-    },
-    { width: 250, height: PLATFORM_HEIGHT, xPosition: 1420, yPosition: 555 },
-    { width: 200, height: 24, xPosition: 1750, yPosition: 725 },
-    { width: 200, height: 24, xPosition: 1500, yPosition: 915 },
-];
-
-export function createPlatforms(k: KAPLAYCtx) {
-    createPlatformsFromDefs(k, LEVEL1_PLATFORM_DEFS, PLATFORM_COLOR);
 }

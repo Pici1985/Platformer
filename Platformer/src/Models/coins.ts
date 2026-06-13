@@ -1,19 +1,19 @@
 import type { GameObj, KAPLAYCtx } from "kaplay";
-import blueCoinUrl from "../images/coins/blueCoin.png";
-import cake1Url from "../images/coins/cake1.png";
-import cake2Url from "../images/coins/cake2.png";
-import cake3Url from "../images/coins/cake3.png";
-import cake4Url from "../images/coins/cake4.png";
-import cake5Url from "../images/coins/cake5.png";
-import cake6Url from "../images/coins/cake6.png";
-import cake7Url from "../images/coins/cake7.png";
-import cake8Url from "../images/coins/cake8.png";
-import goldCoinUrl from "../images/coins/goldCoin.png";
-import greenCoinUrl from "../images/coins/greenCoin.png";
-import redCoinUrl from "../images/coins/redCoin.png";
-import collectSoundUrl from "../sounds/popup.mp3";
-import spawnSoundUrl from "../sounds/spawn.wav";
-import { scaleUniform } from "./layout";
+import blueCoinUrl from "../../images/coins/blueCoin.png";
+import cake1Url from "../../images/coins/cake1.png";
+import cake2Url from "../../images/coins/cake2.png";
+import cake3Url from "../../images/coins/cake3.png";
+import cake4Url from "../../images/coins/cake4.png";
+import cake5Url from "../../images/coins/cake5.png";
+import cake6Url from "../../images/coins/cake6.png";
+import cake7Url from "../../images/coins/cake7.png";
+import cake8Url from "../../images/coins/cake8.png";
+import goldCoinUrl from "../../images/coins/goldCoin.png";
+import greenCoinUrl from "../../images/coins/greenCoin.png";
+import redCoinUrl from "../../images/coins/redCoin.png";
+import collectSoundUrl from "../../sounds/popup.mp3";
+import spawnSoundUrl from "../../sounds/spawn.wav";
+import { scaleUniform } from "../Base/layout";
 
 const COIN_SIZE = 50;
 

@@ -3,13 +3,13 @@ import {
     DESIGN_WIDTH,
     LEFT_WALL_WIDTH,
     RIGHT_WALL_WIDTH,
-} from "./layout";
+} from "../Base/layout";
 import {
     createPlatformsFromDefs,
     PLATFORM_HEIGHT,
     PLATFORM_WIDTH,
     type PlatformDef,
-} from "./platforms";
+} from "../Base/platforms";
 
 /** Level 2 platform color (design-space positions below). */
 const LEVEL2_PLATFORM_COLOR = [255, 0, 255] as const;

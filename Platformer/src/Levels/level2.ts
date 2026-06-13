@@ -1,11 +1,11 @@
 import type { KAPLAYCtx } from "kaplay";
-import { createBackground, KUKAC2K_SPRITE } from "./background";
-import { setupCoins } from "./coins";
+import { createBackground, KUKAC2K_SPRITE } from "../Base/background";
+import { setupTouchControls } from "../Base/touchControls";
+import { createWalls } from "../Base/walls";
+import { setupCollectionUI } from "../Dialogs/stickerChart";
 import { createLevel2Platforms } from "./level2Platforms";
-import { createPlayer, setupPlayerControls, setupPlayerTwoSpawn } from "./player";
-import { setupTouchControls } from "./touchControls";
-import { setupCollectionUI } from "./stickerChart";
-import { createWalls } from "./walls";
+import { createPlayer, setupPlayerControls, setupPlayerTwoSpawn } from "../Models/player";
+import { setupCoins } from "../Models/coins";
 
 export function setupLevel2(k: KAPLAYCtx) {
     createBackground(k, KUKAC2K_SPRITE);

@@ -1,29 +1,26 @@
 import kaplay from "kaplay";
 import "kaplay/global";
-import playerTwoUrl from "../images/players/cicaMini.png";
-import csikosUrl from "../images/players/csikos.png";
-import doggyUrl from "../images/players/doggy.png";
 import flowers2kUrl from "../images/backgrounds/flowers2k.jpg";
 import kukac2kUrl from "../images/backgrounds/kukac2k.jpg";
 import storm2kUrl from "../images/backgrounds/storm2k.png";
-import { createBackground } from "./background";
-import { loadCakeSprites, loadCoinSounds, loadCoinSprites, setupCoins } from "./coins";
-import { setupLevel2 } from "./level2";
-import { setupLevel3 } from "./level3";
-import { createPlatforms } from "./platforms";
-import { loadStickerChartAssets, setupCollectionUI } from "./stickerChart";
-import { createWalls } from "./walls";
-import { loadCharacterSelectSounds, showCharacterSelect } from "./characterSelect";
-import { DESIGN_GRAVITY, DESIGN_HEIGHT, DESIGN_WIDTH, scalePhysics } from "./layout";
+import playerTwoUrl from "../images/players/cicaMini.png";
+import csikosUrl from "../images/players/csikos.png";
+import doggyUrl from "../images/players/doggy.png";
+import { DESIGN_GRAVITY, DESIGN_HEIGHT, DESIGN_WIDTH, scalePhysics } from "./Base/layout";
+import { loadLifeDisplayAssets, setupLifeDisplay } from "./Base/lifeDisplay";
+import { loadTouchControlAssets } from "./Base/touchControls";
+import { loadCakeSprites, loadCoinSounds, loadCoinSprites } from "./Models/coins";
+import { loadEnemySprites } from "./Models/enemy";
+import { loadCharacterSelectSounds } from "./Dialogs/characterSelect";
+import { loadStickerChartAssets } from "./Dialogs/stickerChart";
+import { setupLevel1 } from "./Levels/level1";
+import { setupLevel2 } from "./Levels/level2";
+import { setupLevel3 } from "./Levels/level3";
 import {
-    createPlayer,
     CSIKOS_SPRITE,
     loadPlayerSounds,
     PLAYER_TWO_SPRITE,
-    setupPlayerControls,
-    setupPlayerTwoSpawn,
-} from "./player";
-import { loadTouchControlAssets, setupTouchControls } from "./touchControls";
+} from "./Models/player";
 
 const k = kaplay({
     width: DESIGN_WIDTH,
@@ -41,28 +38,19 @@ k.loadSprite("doggy", doggyUrl);
 k.loadSprite("flowers2k", flowers2kUrl);
 k.loadSprite("kukac2k", kukac2kUrl);
 k.loadSprite("storm2k", storm2kUrl);
+
 loadCoinSprites(k);
+loadEnemySprites(k);
 loadCakeSprites(k);
 loadCoinSounds(k);
 loadPlayerSounds(k);
 loadCharacterSelectSounds(k);
 loadStickerChartAssets(k);
+loadLifeDisplayAssets(k);
 loadTouchControlAssets(k);
 
 k.scene("level1", () => {
-    createBackground(k);
-    createPlatforms(k);
-    createWalls(k);
-
-    showCharacterSelect(k, () => {
-        const player = createPlayer(k);
-        setupPlayerControls(k, player);
-        setupTouchControls(k, player);
-        setupPlayerTwoSpawn(k);
-
-        const collectionUI = setupCollectionUI(k);
-        setupCoins(k, { onCollect: collectionUI.onCoinCollected });
-    });
+    setupLevel1(k);
 });
 
 k.scene("level2", () => {
