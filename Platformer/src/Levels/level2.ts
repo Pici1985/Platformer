@@ -1,5 +1,6 @@
 import type { KAPLAYCtx } from "kaplay";
 import { createBackground, KUKAC2K_SPRITE } from "../Base/background";
+import { setupGameplay } from "../Base/gameplay";
 import { setupTouchControls } from "../Base/touchControls";
 import { createWalls } from "../Base/walls";
 import { setupCollectionUI } from "../Dialogs/stickerChart";
@@ -11,6 +12,8 @@ export function setupLevel2(k: KAPLAYCtx) {
     createBackground(k, KUKAC2K_SPRITE);
     createWalls(k);
     createLevel2Platforms(k);
+
+    setupGameplay(k);
 
     const player = createPlayer(k);
     setupPlayerControls(k, player);

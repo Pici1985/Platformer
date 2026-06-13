@@ -20,6 +20,12 @@ export type LifeDisplay = {
     getLives: () => number;
 };
 
+let remainingLives = MAX_LIVES;
+
+export function resetLives() {
+    remainingLives = MAX_LIVES;
+}
+
 export function loadLifeDisplayAssets(k: KAPLAYCtx) {
     k.loadSprite(HEART_SPRITE, heartNoBgUrl);
 }
@@ -28,7 +34,7 @@ export function setupLifeDisplay(k: KAPLAYCtx): LifeDisplay | null {
     const difficulty = getSelectedDifficulty();
     if (difficulty === "easy") return null;
 
-    let lives = MAX_LIVES;
+    let lives = remainingLives;
 
     const root = k.add([
         k.fixed(),
@@ -38,7 +44,7 @@ export function setupLifeDisplay(k: KAPLAYCtx): LifeDisplay | null {
     ]);
 
     const hearts: HeartObj[] = [];
-    for (let i = 0; i < MAX_LIVES; i++) {
+    for (let i = 0; i < lives; i++) {
         hearts.push(
             root.add([
                 k.sprite(HEART_SPRITE, { width: 1, height: 1 }),
@@ -69,6 +75,7 @@ export function setupLifeDisplay(k: KAPLAYCtx): LifeDisplay | null {
             if (lives <= 0) return false;
 
             lives--;
+            remainingLives = lives;
             k.destroy(hearts[lives]);
             return lives > 0;
         },

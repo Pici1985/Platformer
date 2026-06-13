@@ -1,0 +1,2 @@
+
+give me a convetional commit message for the currently staged git changes, don't commit just give me the git message.

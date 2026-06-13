@@ -10,6 +10,7 @@ import {
     scaleY,
 } from "../Base/layout";
 import { getSelectedDifficulty } from "../Dialogs/difficultySelect";
+import { ENEMY_SPAWN_INTERVAL_SEC } from "../config";
 
 export const WOLF_SPRITE = "wolf";
 
@@ -38,6 +39,34 @@ function syncFacing(enemy: GameObj, direction: number) {
     enemy.flipX = direction > 0;
 }
 
+/** Cooldown before the same pair can turn again while still overlapping. */
+const ENEMY_PAIR_TURN_COOLDOWN_SEC = 0.2;
+
+const patrolTurnByEnemy = new WeakMap<GameObj, () => void>();
+const overlappingEnemyPairs = new Set<string>();
+const enemyPairTurnCooldowns = new Map<string, number>();
+
+function enemyPairKey(a: GameObj, b: GameObj) {
+    return a.id < b.id ? `${a.id}:${b.id}` : `${b.id}:${a.id}`;
+}
+
+function reverseEnemyPatrol(enemy: GameObj) {
+    patrolTurnByEnemy.get(enemy)?.();
+}
+
+export function defeatEnemy(k: KAPLAYCtx, enemy: GameObj) {
+    if (!enemy.exists() || !enemy.is("enemy")) return;
+
+    enemy.untag("enemy");
+
+    // Defer destroy until after the collision step finishes.
+    k.wait(0, () => {
+        if (enemy.exists()) {
+            k.destroy(enemy);
+        }
+    });
+}
+
 function setupWolfPatrol(k: KAPLAYCtx, enemy: GameObj, enemyWidth: number) {
     let direction = k.rand(0, 1) < 0.5 ? -1 : 1;
     let secondsUntilRandomTurn = MIN_RANDOM_TURN_SEC + k.rand(0, 1);
@@ -52,6 +81,8 @@ function setupWolfPatrol(k: KAPLAYCtx, enemy: GameObj, enemyWidth: number) {
         syncFacing(enemy, direction);
     };
 
+    patrolTurnByEnemy.set(enemy, turn);
+
     const turnFromSideWall = (newDirection: number) => {
         direction = newDirection;
         syncFacing(enemy, direction);
@@ -59,6 +90,8 @@ function setupWolfPatrol(k: KAPLAYCtx, enemy: GameObj, enemyWidth: number) {
     };
 
     const updateController = k.onUpdate(() => {
+        if (!enemy.exists() || !enemy.is("enemy")) return;
+
         enemy.move(direction * speed, 0);
 
         if (enemy.pos.x <= minX) {
@@ -80,6 +113,56 @@ function setupWolfPatrol(k: KAPLAYCtx, enemy: GameObj, enemyWidth: number) {
 
     enemy.onDestroy(() => {
         updateController.cancel();
+        patrolTurnByEnemy.delete(enemy);
+
+        for (const key of [...overlappingEnemyPairs]) {
+            if (key.includes(`${enemy.id}:`) || key.endsWith(`:${enemy.id}`)) {
+                overlappingEnemyPairs.delete(key);
+                enemyPairTurnCooldowns.delete(key);
+            }
+        }
+    });
+}
+
+let enemyEnemyCollideController: ReturnType<KAPLAYCtx["onUpdate"]> | null = null;
+
+function setupEnemyEnemyCollisions(k: KAPLAYCtx) {
+    enemyEnemyCollideController?.cancel();
+    overlappingEnemyPairs.clear();
+    enemyPairTurnCooldowns.clear();
+
+    enemyEnemyCollideController = k.onUpdate(() => {
+        const enemies = k.get("enemy");
+
+        for (let i = 0; i < enemies.length; i++) {
+            for (let j = i + 1; j < enemies.length; j++) {
+                const a = enemies[i];
+                const b = enemies[j];
+                const key = enemyPairKey(a, b);
+                const colliding = a.isColliding(b);
+
+                if (!colliding) {
+                    overlappingEnemyPairs.delete(key);
+                    continue;
+                }
+
+                if (overlappingEnemyPairs.has(key)) continue;
+
+                const cooldown = enemyPairTurnCooldowns.get(key) ?? 0;
+                if (cooldown > 0) continue;
+
+                overlappingEnemyPairs.add(key);
+                reverseEnemyPatrol(a);
+                reverseEnemyPatrol(b);
+                enemyPairTurnCooldowns.set(key, ENEMY_PAIR_TURN_COOLDOWN_SEC);
+            }
+        }
+
+        for (const [key, remaining] of [...enemyPairTurnCooldowns.entries()]) {
+            const next = remaining - k.dt();
+            if (next <= 0) enemyPairTurnCooldowns.delete(key);
+            else enemyPairTurnCooldowns.set(key, next);
+        }
     });
 }
 
@@ -102,9 +185,12 @@ export function createWolfEnemy(
     return enemy;
 }
 
-export function spawnEnemiesForDifficulty(k: KAPLAYCtx) {
+export function setupEnemySpawner(k: KAPLAYCtx) {
     const difficulty = getSelectedDifficulty();
     if (difficulty === "easy") return;
 
-    createWolfEnemy(k);
+    setupEnemyEnemyCollisions(k);
+
+    k.wait(0, () => createWolfEnemy(k));
+    k.loop(ENEMY_SPAWN_INTERVAL_SEC, () => createWolfEnemy(k));
 }
