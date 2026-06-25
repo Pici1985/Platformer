@@ -1,4 +1,4 @@
-import type { GameObj, KAPLAYCtx } from "kaplay";
+import type { Collision, GameObj, KAPLAYCtx } from "kaplay";
 import wolfUrl from "../../images/players/wolf.png";
 import {
     DESIGN_WIDTH,
@@ -10,6 +10,7 @@ import {
     scaleY,
 } from "../Base/layout";
 import { getSelectedDifficulty } from "../Dialogs/difficultySelect";
+import type { LifeDisplay } from "../Base/lifeDisplay";
 import { ENEMY_SPAWN_INTERVAL_SEC } from "../config";
 
 export const WOLF_SPRITE = "wolf";
@@ -21,7 +22,10 @@ export const ENEMY_HEIGHT = 120;
 /** Horizontal patrol speed in design pixels per second. */
 const ENEMY_SPEED = 120;
 
-/** Small upward hop when the player bumps an enemy (design px/s; normal player jump is ~800). */
+/** Top fraction of the enemy hitbox used only for the worldArea fallback (0–1). */
+const STOMP_ZONE_RATIO = 0.45;
+
+/** Small upward hop on a side hit (design px/s; normal player jump is ~800). */
 export const ENEMY_KICKBACK_JUMP_FORCE = 300;
 
 /** Minimum seconds between random turn checks (may or may not turn). */
@@ -128,17 +132,81 @@ function setupWolfPatrol(k: KAPLAYCtx, enemy: GameObj, enemyWidth: number) {
 }
 
 let enemyEnemyCollideController: ReturnType<KAPLAYCtx["onUpdate"]> | null = null;
-let playerEnemyCollideController: ReturnType<KAPLAYCtx["onCollide"]> | null = null;
+let playerEnemyCollideController: ReturnType<KAPLAYCtx["onCollideUpdate"]> | null = null;
+let playerEnemyCollideEndController: ReturnType<KAPLAYCtx["onCollideEnd"]> | null = null;
+
+const handledPlayerEnemyPairs = new Set<string>();
+
+function playerEnemyPairKey(player: GameObj, enemy: GameObj) {
+    return `${player.id}:${enemy.id}`;
+}
+
+function areaBounds(obj: GameObj) {
+    const pts = obj.worldArea().pts;
+    let top = Infinity;
+    let bottom = -Infinity;
+    let left = Infinity;
+    let right = -Infinity;
+
+    for (const pt of pts) {
+        top = Math.min(top, pt.y);
+        bottom = Math.max(bottom, pt.y);
+        left = Math.min(left, pt.x);
+        right = Math.max(right, pt.x);
+    }
+
+    return { top, bottom, left, right, centerY: (top + bottom) / 2 };
+}
+
+function isStompFromTop(player: GameObj, enemy: GameObj, col?: Collision) {
+    if (col) {
+        const fromPlayer =
+            col.source.id === player.id ? col : col.reverse();
+        if (fromPlayer.isBottom()) return true;
+    }
+
+    const playerBounds = areaBounds(player);
+    const enemyBounds = areaBounds(enemy);
+    const stompLine =
+        enemyBounds.top +
+        (enemyBounds.bottom - enemyBounds.top) * STOMP_ZONE_RATIO;
+
+    return (
+        player.vel.y > 0 &&
+        playerBounds.bottom <= stompLine &&
+        playerBounds.centerY < enemyBounds.centerY
+    );
+}
 
 function kickPlayerFromEnemy(k: KAPLAYCtx, player: GameObj) {
     player.vel.x = 0;
     player.jump(scalePhysics(k, ENEMY_KICKBACK_JUMP_FORCE));
 }
 
-function setupPlayerEnemyCollisions(k: KAPLAYCtx) {
+function setupPlayerEnemyCollisions(
+    k: KAPLAYCtx,
+    lifeDisplay: LifeDisplay | null,
+) {
     playerEnemyCollideController?.cancel();
-    playerEnemyCollideController = k.onCollide("player", "enemy", (player) => {
+    playerEnemyCollideEndController?.cancel();
+    handledPlayerEnemyPairs.clear();
+
+    playerEnemyCollideController = k.onCollideUpdate("player", "enemy", (player, enemy, col) => {
+        const key = playerEnemyPairKey(player, enemy);
+        if (handledPlayerEnemyPairs.has(key)) return;
+        handledPlayerEnemyPairs.add(key);
+
+        if (isStompFromTop(player, enemy, col)) {
+            defeatEnemy(k, enemy);
+            return;
+        }
+
         kickPlayerFromEnemy(k, player);
+        lifeDisplay?.loseLife();
+    });
+
+    playerEnemyCollideEndController = k.onCollideEnd("player", "enemy", (player, enemy) => {
+        handledPlayerEnemyPairs.delete(playerEnemyPairKey(player, enemy));
     });
 }
 
@@ -201,12 +269,15 @@ export function createWolfEnemy(
     return enemy;
 }
 
-export function setupEnemySpawner(k: KAPLAYCtx) {
+export function setupEnemySpawner(
+    k: KAPLAYCtx,
+    lifeDisplay: LifeDisplay | null = null,
+) {
     const difficulty = getSelectedDifficulty();
     if (difficulty === "easy") return;
 
     setupEnemyEnemyCollisions(k);
-    setupPlayerEnemyCollisions(k);
+    setupPlayerEnemyCollisions(k, lifeDisplay);
 
     k.loop(ENEMY_SPAWN_INTERVAL_SEC, () => createWolfEnemy(k));
 }

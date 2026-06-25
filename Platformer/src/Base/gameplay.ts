@@ -11,6 +11,6 @@ export function beginNewGame(k: KAPLAYCtx): LifeDisplay | null {
 /** Set up hearts and enemies (lives carry over between levels). */
 export function setupGameplay(k: KAPLAYCtx): LifeDisplay | null {
     const lifeDisplay = setupLifeDisplay(k);
-    setupEnemySpawner(k);
+    setupEnemySpawner(k, lifeDisplay);
     return lifeDisplay;
 }
