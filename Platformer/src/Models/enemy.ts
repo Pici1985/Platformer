@@ -11,6 +11,7 @@ import {
 } from "../Base/layout";
 import { getSelectedDifficulty } from "../Dialogs/difficultySelect";
 import type { LifeDisplay } from "../Base/lifeDisplay";
+import { showGameOver } from "../Dialogs/gameOver";
 import { ENEMY_SPAWN_INTERVAL_SEC } from "../config";
 
 export const WOLF_SPRITE = "wolf";
@@ -134,6 +135,7 @@ function setupWolfPatrol(k: KAPLAYCtx, enemy: GameObj, enemyWidth: number) {
 let enemyEnemyCollideController: ReturnType<KAPLAYCtx["onUpdate"]> | null = null;
 let playerEnemyCollideController: ReturnType<KAPLAYCtx["onCollideUpdate"]> | null = null;
 let playerEnemyCollideEndController: ReturnType<KAPLAYCtx["onCollideEnd"]> | null = null;
+let gameOverActive = false;
 
 const handledPlayerEnemyPairs = new Set<string>();
 
@@ -192,6 +194,8 @@ function setupPlayerEnemyCollisions(
     handledPlayerEnemyPairs.clear();
 
     playerEnemyCollideController = k.onCollideUpdate("player", "enemy", (player, enemy, col) => {
+        if (gameOverActive) return;
+
         const key = playerEnemyPairKey(player, enemy);
         if (handledPlayerEnemyPairs.has(key)) return;
         handledPlayerEnemyPairs.add(key);
@@ -202,7 +206,17 @@ function setupPlayerEnemyCollisions(
         }
 
         kickPlayerFromEnemy(k, player);
-        lifeDisplay?.loseLife();
+        if (!lifeDisplay) return;
+
+        const stillAlive = lifeDisplay.loseLife();
+        if (!stillAlive) {
+            gameOverActive = true;
+            showGameOver(k, () => {
+                gameOverActive = false;
+                k.debug.paused = false;
+                k.go("level1");
+            });
+        }
     });
 
     playerEnemyCollideEndController = k.onCollideEnd("player", "enemy", (player, enemy) => {
@@ -276,6 +290,7 @@ export function setupEnemySpawner(
     const difficulty = getSelectedDifficulty();
     if (difficulty === "easy") return;
 
+    gameOverActive = false;
     setupEnemyEnemyCollisions(k);
     setupPlayerEnemyCollisions(k, lifeDisplay);
 
