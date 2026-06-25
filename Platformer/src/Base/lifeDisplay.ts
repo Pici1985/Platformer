@@ -1,15 +1,11 @@
 import type { GameObj, KAPLAYCtx } from "kaplay";
-import heartNoBgUrl from "../../images/coins/heartNoBg.png";
+import { HEART_SPRITE, HUD_HEART_SIZE } from "../Models/heart";
 import { scaleUniform, scaleX, scaleY } from "./layout";
 import { getSelectedDifficulty } from "../Dialogs/difficultySelect";
 
-export const HEART_SPRITE = "heartNoBg";
+/** Lives at the start of a new run (no upper cap when collecting hearts). */
+export const STARTING_LIVES = 3;
 
-/** Number of lives shown in the HUD. */
-export const MAX_LIVES = 3;
-
-/** Heart icon size in design pixels. */
-const HEART_SIZE = 48;
 const HEART_GAP = 12;
 const TOP_LEFT_MARGIN = 24;
 
@@ -17,22 +13,33 @@ type HeartObj = GameObj & { width: number; height: number };
 
 export type LifeDisplay = {
     loseLife: () => boolean;
+    gainLife: () => void;
     getLives: () => number;
 };
 
-let remainingLives = MAX_LIVES;
+let remainingLives = STARTING_LIVES;
+let hudRoot: GameObj | null = null;
+let activeLifeDisplay: LifeDisplay | null = null;
 
 export function resetLives() {
-    remainingLives = MAX_LIVES;
+    remainingLives = STARTING_LIVES;
+    activeLifeDisplay = null;
 }
 
-export function loadLifeDisplayAssets(k: KAPLAYCtx) {
-    k.loadSprite(HEART_SPRITE, heartNoBgUrl);
+export function getActiveLifeDisplay() {
+    return activeLifeDisplay;
 }
 
 export function setupLifeDisplay(k: KAPLAYCtx): LifeDisplay | null {
     const difficulty = getSelectedDifficulty();
-    if (difficulty === "easy") return null;
+    if (difficulty === "easy") {
+        activeLifeDisplay = null;
+        return null;
+    }
+
+    if (hudRoot?.exists()) {
+        k.destroy(hudRoot);
+    }
 
     let lives = remainingLives;
 
@@ -42,6 +49,7 @@ export function setupLifeDisplay(k: KAPLAYCtx): LifeDisplay | null {
         k.anchor("topleft"),
         k.pos(0, 0),
     ]);
+    hudRoot = root;
 
     const hearts: HeartObj[] = [];
     for (let i = 0; i < lives; i++) {
@@ -54,7 +62,7 @@ export function setupLifeDisplay(k: KAPLAYCtx): LifeDisplay | null {
     }
 
     const layout = () => {
-        const size = scaleUniform(k, HEART_SIZE);
+        const size = scaleUniform(k, HUD_HEART_SIZE);
         const gap = scaleX(k, HEART_GAP);
         const margin = scaleUniform(k, TOP_LEFT_MARGIN);
 
@@ -70,15 +78,35 @@ export function setupLifeDisplay(k: KAPLAYCtx): LifeDisplay | null {
     layout();
     k.onResize(layout);
 
-    return {
+    const lifeDisplay: LifeDisplay = {
         loseLife() {
             if (lives <= 0) return false;
 
+            const heart = hearts.pop();
+            if (heart?.exists()) {
+                k.destroy(heart);
+            }
+
             lives--;
             remainingLives = lives;
-            k.destroy(hearts[lives]);
+            layout();
+
             return lives > 0;
+        },
+        gainLife() {
+            hearts.push(
+                root.add([
+                    k.sprite(HEART_SPRITE, { width: 1, height: 1 }),
+                    k.anchor("topleft"),
+                ]) as HeartObj,
+            );
+            lives++;
+            remainingLives = lives;
+            layout();
         },
         getLives: () => lives,
     };
+
+    activeLifeDisplay = lifeDisplay;
+    return lifeDisplay;
 }

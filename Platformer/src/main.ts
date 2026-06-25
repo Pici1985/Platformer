@@ -7,7 +7,7 @@ import playerTwoUrl from "../images/players/cicaMini.png";
 import csikosUrl from "../images/players/csikos.png";
 import doggyUrl from "../images/players/doggy.png";
 import { DESIGN_GRAVITY, DESIGN_HEIGHT, DESIGN_WIDTH, scalePhysics } from "./Base/layout";
-import { loadLifeDisplayAssets, setupLifeDisplay } from "./Base/lifeDisplay";
+import { loadHeartSounds, loadHeartSprites } from "./Models/heart";
 import { loadTouchControlAssets } from "./Base/touchControls";
 import { loadCakeSprites, loadCoinSounds, loadCoinSprites } from "./Models/coins";
 import { loadEnemySprites } from "./Models/enemy";
@@ -46,7 +46,8 @@ loadCoinSounds(k);
 loadPlayerSounds(k);
 loadCharacterSelectSounds(k);
 loadStickerChartAssets(k);
-loadLifeDisplayAssets(k);
+loadHeartSprites(k);
+loadHeartSounds(k);
 loadTouchControlAssets(k);
 
 k.scene("level1", () => {

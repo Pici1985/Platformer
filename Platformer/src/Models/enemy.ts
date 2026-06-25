@@ -10,7 +10,7 @@ import {
     scaleY,
 } from "../Base/layout";
 import { getSelectedDifficulty } from "../Dialogs/difficultySelect";
-import type { LifeDisplay } from "../Base/lifeDisplay";
+import { getActiveLifeDisplay } from "../Base/lifeDisplay";
 import { showGameOver } from "../Dialogs/gameOver";
 import { ENEMY_SPAWN_INTERVAL_SEC } from "../config";
 
@@ -185,10 +185,7 @@ function kickPlayerFromEnemy(k: KAPLAYCtx, player: GameObj) {
     player.jump(scalePhysics(k, ENEMY_KICKBACK_JUMP_FORCE));
 }
 
-function setupPlayerEnemyCollisions(
-    k: KAPLAYCtx,
-    lifeDisplay: LifeDisplay | null,
-) {
+function setupPlayerEnemyCollisions(k: KAPLAYCtx) {
     playerEnemyCollideController?.cancel();
     playerEnemyCollideEndController?.cancel();
     handledPlayerEnemyPairs.clear();
@@ -206,6 +203,8 @@ function setupPlayerEnemyCollisions(
         }
 
         kickPlayerFromEnemy(k, player);
+
+        const lifeDisplay = getActiveLifeDisplay();
         if (!lifeDisplay) return;
 
         const stillAlive = lifeDisplay.loseLife();
@@ -283,16 +282,13 @@ export function createWolfEnemy(
     return enemy;
 }
 
-export function setupEnemySpawner(
-    k: KAPLAYCtx,
-    lifeDisplay: LifeDisplay | null = null,
-) {
+export function setupEnemySpawner(k: KAPLAYCtx) {
     const difficulty = getSelectedDifficulty();
     if (difficulty === "easy") return;
 
     gameOverActive = false;
     setupEnemyEnemyCollisions(k);
-    setupPlayerEnemyCollisions(k, lifeDisplay);
+    setupPlayerEnemyCollisions(k);
 
     k.loop(ENEMY_SPAWN_INTERVAL_SEC, () => createWolfEnemy(k));
 }

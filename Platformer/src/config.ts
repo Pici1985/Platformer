@@ -31,3 +31,5 @@ export const ALWAYS_SHOW_STICKER_CHART = false;
 export const SKIP_STICKER_CHART = false;
 /** Seconds between each sticker-chart coin appearing (first coin is immediate). */
 export const CHART_COIN_SPAWN_DELAY_SEC = 1;
+
+export const HEART_SPAWN_INTERVAL_SEC = 15;
