@@ -21,6 +21,9 @@ export const ENEMY_HEIGHT = 120;
 /** Horizontal patrol speed in design pixels per second. */
 const ENEMY_SPEED = 120;
 
+/** Small upward hop when the player bumps an enemy (design px/s; normal player jump is ~800). */
+export const ENEMY_KICKBACK_JUMP_FORCE = 300;
+
 /** Minimum seconds between random turn checks (may or may not turn). */
 const MIN_RANDOM_TURN_SEC = 1;
 
@@ -125,6 +128,19 @@ function setupWolfPatrol(k: KAPLAYCtx, enemy: GameObj, enemyWidth: number) {
 }
 
 let enemyEnemyCollideController: ReturnType<KAPLAYCtx["onUpdate"]> | null = null;
+let playerEnemyCollideController: ReturnType<KAPLAYCtx["onCollide"]> | null = null;
+
+function kickPlayerFromEnemy(k: KAPLAYCtx, player: GameObj) {
+    player.vel.x = 0;
+    player.jump(scalePhysics(k, ENEMY_KICKBACK_JUMP_FORCE));
+}
+
+function setupPlayerEnemyCollisions(k: KAPLAYCtx) {
+    playerEnemyCollideController?.cancel();
+    playerEnemyCollideController = k.onCollide("player", "enemy", (player) => {
+        kickPlayerFromEnemy(k, player);
+    });
+}
 
 function setupEnemyEnemyCollisions(k: KAPLAYCtx) {
     enemyEnemyCollideController?.cancel();
@@ -190,7 +206,7 @@ export function setupEnemySpawner(k: KAPLAYCtx) {
     if (difficulty === "easy") return;
 
     setupEnemyEnemyCollisions(k);
+    setupPlayerEnemyCollisions(k);
 
-    k.wait(0, () => createWolfEnemy(k));
     k.loop(ENEMY_SPAWN_INTERVAL_SEC, () => createWolfEnemy(k));
 }
