@@ -9,8 +9,8 @@ import {
     scaleX,
     scaleY,
 } from "../Base/layout";
-import { getSelectedDifficulty } from "../Dialogs/difficultySelect";
 import { getActiveLifeDisplay } from "../Base/lifeDisplay";
+import { getSelectedDifficulty } from "../Dialogs/difficultySelect";
 import { showGameOver } from "../Dialogs/gameOver";
 import { ENEMY_SPAWN_INTERVAL_SEC } from "../config";
 
@@ -198,6 +198,7 @@ function setupPlayerEnemyCollisions(k: KAPLAYCtx) {
         handledPlayerEnemyPairs.add(key);
 
         if (isStompFromTop(player, enemy, col)) {
+            kickPlayerFromEnemy(k, player);
             defeatEnemy(k, enemy);
             return;
         }
