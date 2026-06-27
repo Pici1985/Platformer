@@ -44,6 +44,9 @@ const MIN_RANDOM_TURN_SEC = 1;
 /** Chance to reverse direction when a random turn check fires (0–1). */
 const RANDOM_TURN_CHANCE = 0.5;
 
+/** While chasing, ignore small horizontal offsets — design pixels. */
+const CHASE_VERTICAL_ALIGN_THRESHOLD = 24;
+
 /** Default spawn on the middle platform (level 1). */
 const WOLF_SPAWN_X = 840;
 const WOLF_SPAWN_Y = 375 - ENEMY_HEIGHT;
@@ -116,8 +119,10 @@ function setupWolfPatrol(
 ) {
     let direction = k.rand(0, 1) < 0.5 ? -1 : 1;
     let secondsUntilRandomTurn = MIN_RANDOM_TURN_SEC + k.rand(0, 1);
+    let verticalChaseDirection: number | null = null;
     const speed = scalePhysics(k, ENEMY_SPEED);
     const auraRadius = scaleUniform(k, ENEMY_AURA_RADIUS);
+    const chaseAlignThreshold = scaleUniform(k, CHASE_VERTICAL_ALIGN_THRESHOLD);
     const minX = scaleX(k, LEFT_WALL_WIDTH);
     const maxX = scaleX(k, DESIGN_WIDTH - RIGHT_WALL_WIDTH) - enemyWidth;
 
@@ -155,12 +160,25 @@ function setupWolfPatrol(
         const chasing = player?.exists() && isPlayerInAura(player);
 
         if (chasing) {
-            const dx = player.pos.x - enemy.pos.x;
-            if (Math.abs(dx) > 1) {
+            const playerBounds = areaBounds(player);
+            const playerCenterX = (playerBounds.left + playerBounds.right) / 2;
+            const enemyCenterX = enemy.pos.x + enemyWidth / 2;
+            const dx = playerCenterX - enemyCenterX;
+
+            if (Math.abs(dx) <= chaseAlignThreshold) {
+                if (verticalChaseDirection === null) {
+                    verticalChaseDirection =
+                        direction !== 0 ? direction : k.rand(0, 1) < 0.5 ? -1 : 1;
+                }
+                direction = verticalChaseDirection;
+            } else {
+                verticalChaseDirection = null;
                 direction = Math.sign(dx);
-                syncFacing(enemy, direction);
             }
+
+            syncFacing(enemy, direction);
         } else {
+            verticalChaseDirection = null;
             secondsUntilRandomTurn -= k.dt();
             if (secondsUntilRandomTurn <= 0) {
                 if (k.rand(0, 1) < RANDOM_TURN_CHANCE) {
