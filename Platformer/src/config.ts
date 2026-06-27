@@ -15,7 +15,7 @@ export const DIFFICULTY_OPTIONS: readonly DifficultyOption[] = [
 ];
 
 /** Coins the player must collect before the win modal appears. */
-export const COINS_TO_WIN = 10;
+export const COINS_TO_WIN = 20;
 
 /** Seconds between enemy spawns on medium/hard (first enemy is immediate). */
 export const ENEMY_SPAWN_INTERVAL_SEC = 15;
@@ -31,5 +31,8 @@ export const ALWAYS_SHOW_STICKER_CHART = false;
 export const SKIP_STICKER_CHART = false;
 /** Seconds between each sticker-chart coin appearing (first coin is immediate). */
 export const CHART_COIN_SPAWN_DELAY_SEC = 1;
+/** When false, enemy auras are invisible but still present on each enemy. */
+export const SHOW_ENEMY_AURA = true;
 
-export const HEART_SPAWN_INTERVAL_SEC = 15;
+export const HEART_SPAWN_INTERVAL_SEC_MEDIUM = 15;
+export const HEART_SPAWN_INTERVAL_SEC_HARD = 60;

@@ -3,7 +3,11 @@ import heartNoBgUrl from "../../images/coins/heartNoBg.png";
 import collectSoundUrl from "../../sounds/popup.mp3";
 import spawnSoundUrl from "../../sounds/spawn.wav";
 import { getActiveLifeDisplay } from "../Base/lifeDisplay";
-import { HEART_SPAWN_INTERVAL_SEC } from "../config";
+import { getSelectedDifficulty } from "../Dialogs/difficultySelect";
+import {
+    HEART_SPAWN_INTERVAL_SEC_HARD,
+    HEART_SPAWN_INTERVAL_SEC_MEDIUM,
+} from "../config";
 import { scaleUniform } from "../Base/layout";
 
 export const HEART_SPRITE = "heartNoBg";
@@ -58,7 +62,17 @@ function updateHeartSpin(k: KAPLAYCtx, heart: HeartObj) {
     heart.flipX = facing < 0;
 }
 
+function heartSpawnIntervalSec() {
+    const difficulty = getSelectedDifficulty();
+    if (difficulty === "easy") return null;
+    if (difficulty === "hard") return HEART_SPAWN_INTERVAL_SEC_HARD;
+    return HEART_SPAWN_INTERVAL_SEC_MEDIUM;
+}
+
 export function setupHearts(k: KAPLAYCtx) {
+    const spawnInterval = heartSpawnIntervalSec();
+    if (spawnInterval === null) return;
+
     playerHeartCollideController?.cancel();
     enemyHeartCollideController?.cancel();
     heartSpinController?.cancel();
@@ -82,7 +96,7 @@ export function setupHearts(k: KAPLAYCtx) {
     );
 
     heartSpawnLoop = k.loop(
-        HEART_SPAWN_INTERVAL_SEC,
+        spawnInterval,
         () => spawnHeart(k),
         Infinity,
         true,

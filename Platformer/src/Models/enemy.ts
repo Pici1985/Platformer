@@ -6,13 +6,14 @@ import {
     RIGHT_WALL_WIDTH,
     scalePhysics,
     scaleSize,
+    scaleUniform,
     scaleX,
     scaleY,
 } from "../Base/layout";
 import { getActiveLifeDisplay } from "../Base/lifeDisplay";
 import { getSelectedDifficulty } from "../Dialogs/difficultySelect";
 import { showGameOver } from "../Dialogs/gameOver";
-import { ENEMY_SPAWN_INTERVAL_SEC } from "../config";
+import { ENEMY_SPAWN_INTERVAL_SEC, SHOW_ENEMY_AURA } from "../config";
 
 export const WOLF_SPRITE = "wolf";
 
@@ -22,6 +23,14 @@ export const ENEMY_HEIGHT = 120;
 
 /** Horizontal patrol speed in design pixels per second. */
 const ENEMY_SPEED = 120;
+
+/** Aura circle radius in design pixels (centered on the enemy). */
+const ENEMY_AURA_RADIUS = 375;
+
+const ENEMY_AURA_COLOR: readonly [number, number, number] = [244, 67, 54];
+const ENEMY_AURA_FILL_OPACITY = 0.18;
+const ENEMY_AURA_OUTLINE_WIDTH = 3;
+const ENEMY_AURA_OUTLINE_OPACITY = 0.55;
 
 /** Top fraction of the enemy hitbox used only for the worldArea fallback (0–1). */
 const STOMP_ZONE_RATIO = 0.45;
@@ -45,6 +54,30 @@ export function loadEnemySprites(k: KAPLAYCtx) {
 
 function syncFacing(enemy: GameObj, direction: number) {
     enemy.flipX = direction > 0;
+}
+
+function setupEnemyAura(
+    k: KAPLAYCtx,
+    enemy: GameObj,
+    enemyWidth: number,
+    enemyHeight: number,
+) {
+    const radius = scaleUniform(k, ENEMY_AURA_RADIUS);
+    const outlineWidth = scaleUniform(k, ENEMY_AURA_OUTLINE_WIDTH);
+    const [r, g, b] = ENEMY_AURA_COLOR;
+
+    const fillOpacity = SHOW_ENEMY_AURA ? ENEMY_AURA_FILL_OPACITY : 0;
+    const outlineOpacity = SHOW_ENEMY_AURA ? ENEMY_AURA_OUTLINE_OPACITY : 0;
+
+    enemy.add([
+        k.pos(enemyWidth / 2, enemyHeight / 2),
+        k.anchor("center"),
+        k.z(-1),
+        k.circle(radius),
+        k.color(r, g, b),
+        k.opacity(fillOpacity),
+        k.outline(outlineWidth, k.rgb(r, g, b), outlineOpacity),
+    ]);
 }
 
 /** Cooldown before the same pair can turn again while still overlapping. */
@@ -75,10 +108,16 @@ export function defeatEnemy(k: KAPLAYCtx, enemy: GameObj) {
     });
 }
 
-function setupWolfPatrol(k: KAPLAYCtx, enemy: GameObj, enemyWidth: number) {
+function setupWolfPatrol(
+    k: KAPLAYCtx,
+    enemy: GameObj,
+    enemyWidth: number,
+    enemyHeight: number,
+) {
     let direction = k.rand(0, 1) < 0.5 ? -1 : 1;
     let secondsUntilRandomTurn = MIN_RANDOM_TURN_SEC + k.rand(0, 1);
     const speed = scalePhysics(k, ENEMY_SPEED);
+    const auraRadius = scaleUniform(k, ENEMY_AURA_RADIUS);
     const minX = scaleX(k, LEFT_WALL_WIDTH);
     const maxX = scaleX(k, DESIGN_WIDTH - RIGHT_WALL_WIDTH) - enemyWidth;
 
@@ -97,8 +136,39 @@ function setupWolfPatrol(k: KAPLAYCtx, enemy: GameObj, enemyWidth: number) {
         secondsUntilRandomTurn = MIN_RANDOM_TURN_SEC + k.rand(0, 1);
     };
 
+    const auraCenter = () =>
+        k.vec2(enemy.pos.x + enemyWidth / 2, enemy.pos.y + enemyHeight / 2);
+
+    const isPlayerInAura = (player: GameObj) => {
+        const center = auraCenter();
+        const playerBounds = areaBounds(player);
+        const playerCenterX = (playerBounds.left + playerBounds.right) / 2;
+        const dx = playerCenterX - center.x;
+        const dy = playerBounds.centerY - center.y;
+        return Math.hypot(dx, dy) <= auraRadius;
+    };
+
     const updateController = k.onUpdate(() => {
         if (!enemy.exists() || !enemy.is("enemy")) return;
+
+        const player = k.get("player")[0];
+        const chasing = player?.exists() && isPlayerInAura(player);
+
+        if (chasing) {
+            const dx = player.pos.x - enemy.pos.x;
+            if (Math.abs(dx) > 1) {
+                direction = Math.sign(dx);
+                syncFacing(enemy, direction);
+            }
+        } else {
+            secondsUntilRandomTurn -= k.dt();
+            if (secondsUntilRandomTurn <= 0) {
+                if (k.rand(0, 1) < RANDOM_TURN_CHANCE) {
+                    turn();
+                }
+                secondsUntilRandomTurn = MIN_RANDOM_TURN_SEC + k.rand(0, 1);
+            }
+        }
 
         enemy.move(direction * speed, 0);
 
@@ -108,14 +178,6 @@ function setupWolfPatrol(k: KAPLAYCtx, enemy: GameObj, enemyWidth: number) {
         } else if (enemy.pos.x >= maxX) {
             enemy.pos.x = maxX;
             if (direction > 0) turnFromSideWall(-1);
-        }
-
-        secondsUntilRandomTurn -= k.dt();
-        if (secondsUntilRandomTurn <= 0) {
-            if (k.rand(0, 1) < RANDOM_TURN_CHANCE) {
-                turn();
-            }
-            secondsUntilRandomTurn = MIN_RANDOM_TURN_SEC + k.rand(0, 1);
         }
     });
 
@@ -279,7 +341,8 @@ export function createWolfEnemy(
         "enemy",
     ]);
 
-    setupWolfPatrol(k, enemy, width);
+    setupEnemyAura(k, enemy, width, height);
+    setupWolfPatrol(k, enemy, width, height);
     return enemy;
 }
 
